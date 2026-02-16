@@ -2,11 +2,10 @@ import {
   Contract,
   ElectrumNetworkProvider,
   SignatureTemplate,
-  Tx,
-  hexToBin,
 } from 'cashscript';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getCreatorCredentials, getRecipientPublicKey, validatePublicKey } from './wallet';
 
 interface DeploymentConfig {
   network: 'chipnet' | 'testnet' | 'mainnet';
@@ -41,10 +40,18 @@ class BlinchDeployer {
   }> {
     console.log(`🚀 Deploying Blinch contract to ${this.config.network}...`);
 
-    // For demo purposes, using a placeholder HD derivation
-    // In production, this should use proper wallet derivation
-    const creatorKey = this.getCreatorKey();
-    const recipientKey = this.getRecipientKey();
+    // Get credentials from HD wallet or environment
+    console.log('🔐 Deriving keys from HD wallet...');
+    const creatorCredentials = getCreatorCredentials();
+    const recipientPublicKey = this.config.recipientPkh || getRecipientPublicKey();
+
+    // Validate recipient public key
+    if (!validatePublicKey(recipientPublicKey)) {
+      throw new Error('Invalid recipient public key format');
+    }
+
+    console.log(`✓ Creator: ${creatorCredentials.address}`);
+    console.log(`✓ Recipient PK: ${recipientPublicKey.substring(0, 20)}...`);
 
     // Calculate timeout (current block height + timeout)
     const currentHeight = await this.provider.getBlockHeight();
@@ -66,7 +73,7 @@ class BlinchDeployer {
     // Create the contract instance
     const contract = new Contract(
       artifact,
-      [creatorKey.publicKey, recipientKey.publicKey, timeout],
+      [creatorCredentials.publicKey, recipientPublicKey, timeout],
       { provider: this.provider }
     );
 
@@ -76,7 +83,7 @@ class BlinchDeployer {
     // Deploy the contract with some funding
     // For demo: 10,000 satoshis
     const deployTx = await contract.deploy(
-      new SignatureTemplate(creatorKey),
+      new SignatureTemplate(creatorCredentials.privateKey),
       10000
     );
 
@@ -89,8 +96,9 @@ class BlinchDeployer {
       contractAddress: contract.address,
       transactionId: deployTx.txid,
       timeout,
-      creatorPk: creatorKey.publicKey,
-      recipientPk: recipientKey.publicKey,
+      creatorPk: creatorCredentials.publicKey,
+      creatorAddress: creatorCredentials.address,
+      recipientPk: recipientPublicKey,
       deployedAt: new Date().toISOString(),
       blockHeight: currentHeight,
     });
@@ -105,22 +113,21 @@ class BlinchDeployer {
   /**
    * Get creator key from environment or generate one
    * In production, this should derive from a proper HD wallet
+   * @deprecated Use getCreatorCredentials() instead
    */
   private getCreatorKey(): any {
-    // Placeholder - in production use proper HD wallet derivation
-    // For now returning a mock object structure
-    return {
-      publicKey: process.env.CREATOR_PUBLIC_KEY || '0x' + '02'.padEnd(66, '0'),
-      privateKey: process.env.CREATOR_PRIVATE_KEY,
-    };
+    // Deprecated - kept for compatibility
+    return getCreatorCredentials();
   }
 
   /**
    * Get recipient key from config
+   * @deprecated Use getRecipientPublicKey() instead
    */
   private getRecipientKey(): any {
+    // Deprecated - kept for compatibility
     return {
-      publicKey: this.config.recipientPkh || process.env.RECIPIENT_PUBLIC_KEY || '0x' + '03'.padEnd(66, '0'),
+      publicKey: getRecipientPublicKey(),
     };
   }
 
