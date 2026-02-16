@@ -1,0 +1,29 @@
+{
+  "name": "blinch",
+  "version": "1.0.0",
+  "description": "Blinch - Bitcoin Cash interactive Blinks protocol",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm install --workspace=contracts && npm install --workspace=backend && npm install --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build:contract": "npm run build --workspace=contracts",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build:all": "npm run build:contract && npm run build:backend && npm run build:frontend",
+    "test:all": "npm run test --workspace=contracts && npm run test --workspace=backend && npm run test --workspace=frontend"
+  },
+  "keywords": [
+    "bitcoin-cash",
+    "blinks",
+    "covenant",
+    "cashscript"
+  ],
+  "author": "",
+  "license": "MIT"
+}

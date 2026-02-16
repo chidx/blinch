@@ -1,0 +1,30 @@
+{
+  "name": "@blinch/contracts",
+  "version": "1.0.0",
+  "description": "CashScript smart contracts for Blinch protocol",
+  "main": "dist/Blinch.js",
+  "types": "dist/Blinch.d.ts",
+  "scripts": {
+    "build": "cashsc compile Blinch.cash --outdir dist",
+    "deploy:chipnet": "ts-node scripts/deploy.ts --network chipnet",
+    "deploy:testnet": "ts-node scripts/deploy.ts --network testnet",
+    "test": "cashsc test",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "cashscript",
+    "bitcoin-cash",
+    "covenant"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "cashscript": "^0.12.1",
+    "encoding-down": "^7.1.0",
+    "leveldown": "^6.1.1",
+    "electron": "^33.2.0"
+  }
+}
