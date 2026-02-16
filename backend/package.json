@@ -1,7 +1,7 @@
 {
   "name": "@blinch/backend",
   "version": "1.0.0",
-  "description": "Express backend for Blinch BCH-Action JSON API",
+  "description": "Express backend for Blinch BCH-Action JSON API with MCP Gateway",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
@@ -9,18 +9,23 @@
     "start": "node dist/server.js",
     "test": "jest",
     "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix"
+    "lint:fix": "eslint src --ext .ts --fix",
+    "mcp": "tsx src/mcp/index.ts"
   },
   "keywords": [
     "express",
     "bitcoin-cash",
-    "api"
+    "api",
+    "mcp",
+    "ai-gateway"
   ],
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
     "express": "^5.2.1",
     "cors": "^2.8.5",
     "helmet": "^8.0.0",
-    "compression": "^1.7.5"
+    "compression": "^1.7.5",
+    "cashscript": "^0.12.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

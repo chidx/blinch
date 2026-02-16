@@ -91,6 +91,27 @@ This schema is included in the instructions below to ensure the AI follows it st
 >
 > Style the dashboard and the renderer using Tailwind CSS with a modern, glassmorphic dark-mode aesthetic.
 
+### Enhancement 1: Blinch Agent Gateway (AI Infrastructure)
+**Prompt:**
+> Act as a Senior AI Infrastructure Engineer. Build an enhancement for the 'Blinch' protocol called 'Blinch Agent Gateway'.
+>
+> **The Goal**: Enable AI agents to interact with Blinch programmatically using Model Context Protocol (MCP) and x402 HTTP 402 headers.
+>
+> **Technical Requirements**:
+>
+> *   **MCP Server**: Build a TypeScript MCP server that exposes two primary tools to an AI agent:
+>     *   `create_blinch_link`: Takes `amount`, `recipient`, and `action_type` as input. Returns a Blinch-standardized URL.
+>     *   `get_action_metadata`: Allows the agent to 'read' a Blinch JSON schema to understand how much to pay and where.
+>
+> *   **x402 Middleware**: Create an Express 5.2 middleware for the Blinch backend.
+>     *   If a request is made to a protected resource (e.g., an AI prompt or data feed), the server must return a Status 402 (Payment Required).
+>     *   The response must include headers: `X-Payment-Link: [Blinch_URL]` and `X-Payment-Amount: [Sats]`.
+>
+> *   **BCH Integration**: Use the CashScript SDK to provide a `verify_payment` utility that checks if a transaction with the `FLOW\x01` prefix has reached the required amount on-chain before the middleware grants access (200 OK).
+>
+> **Agent Flow**:
+> > Agent tries to access an API → Receives 402 and a Blinch Link → Agent uses the Blinch MCP Tool to sign a BCH transaction → Agent retries with the `X-Payment` header → Server grants access.
+
 ---
 
 ## Notes
