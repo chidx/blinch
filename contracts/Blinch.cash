@@ -1,0 +1,57 @@
+#include "opcode.h"
+
+// Blinch Covenant Contract
+// Enforces that all spending transactions include OP_RETURN with 464c4f5701 prefix
+// Protocol identifier: FLOW\x01
+
+contract Blinch(
+    pubkey creator,
+    pubkey recipient,
+    int timeout
+) {
+    // Execute function: Release funds to recipient with protocol enforcement
+    function execute(sig s, pubkey pk) {
+        // Verify the recipient is spending
+        require(hash160(pk) == hash160(recipient));
+
+        // CRITICAL: Enforce OP_RETURN prefix 464c4f5701 (FLOW\x01)
+        // Check that outputs contain the protocol identifier
+        bool hasProtocolReturn = false;
+        bytes4 protocolPrefix = 0x464c4f57; // "FLOW"
+        bytes1 protocolVersion = 0x01;       // "\x01"
+
+        // Iterate through all outputs to find OP_RETURN with protocol prefix
+        for (int i = 0; i < tx.outputs.length; i++) {
+            bytes lockingBytecode = tx.outputs[i].lockingBytecode;
+
+            // Check if this is an OP_RETURN output (starts with OP_RETURN = 0x6a)
+            if (lockingBytecode.length > 0 && lockingBytecode[0] == 0x6a) {
+                // Extract the data after OP_RETURN
+                if (lockingBytecode.length >= 7) {
+                    // Check for protocol prefix: 0x464c4f5701
+                    bytes4 prefix = lockingBytecode[1:5];
+                    bytes1 version = lockingBytecode[5];
+
+                    if (prefix == protocolPrefix && version == protocolVersion) {
+                        hasProtocolReturn = true;
+                    }
+                }
+            }
+        }
+
+        // REQUIRE: Transaction MUST include OP_RETURN with 464c4f5701 prefix
+        require(hasProtocolReturn);
+
+        // Verify signature
+        require(checkSig(s, pk));
+    }
+
+    // Cancel function: Creator can reclaim after timeout (144 blocks)
+    function cancel(sig s) {
+        // Enforce timeout period (144 blocks)
+        require(tx.time >= timeout);
+
+        // Verify creator signature
+        require(checkSig(s, creator));
+    }
+}
