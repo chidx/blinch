@@ -42,7 +42,7 @@ const PREMIUM_DATA_PAYMENT = {
 router.get(
   '/hello',
   x402(API_ACCESS_PAYMENT),
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
     res.json({
       message: 'Hello! You have successfully paid for access.',
       timestamp: new Date().toISOString(),
@@ -59,7 +59,7 @@ router.get(
 router.get(
   '/data',
   x402(API_ACCESS_PAYMENT),
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
     res.json({
       data: {
         id: 'secret-data-123',
@@ -79,7 +79,7 @@ router.get(
 router.get(
   '/premium',
   x402(PREMIUM_DATA_PAYMENT),
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
     res.json({
       premium: {
         features: ['AI predictions', 'Advanced analytics', 'Real-time data'],

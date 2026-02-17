@@ -18,6 +18,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { createBlinchLinkTool } from './tools/createBlinchLink';
 import { getActionMetadataTool, setActionStore } from './tools/getActionMetadata';
+import type { CreateBlinchLinkParams, GetActionMetadataParams } from './types';
 
 // Initialize MCP server
 const server = new Server(
@@ -89,9 +90,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
   try {
+    if (!args) {
+      throw new Error('Arguments are required');
+    }
+
     switch (name) {
       case 'create_blinch_link': {
-        const result = await createBlinchLinkTool.handler(args);
+        const result = await createBlinchLinkTool.handler(args as unknown as CreateBlinchLinkParams);
         return {
           content: [
             {
@@ -103,7 +108,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'get_action_metadata': {
-        const result = await getActionMetadataTool.handler(args);
+        const result = await getActionMetadataTool.handler(args as unknown as GetActionMetadataParams);
         return {
           content: [
             {

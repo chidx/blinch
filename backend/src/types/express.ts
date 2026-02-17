@@ -3,6 +3,7 @@
  */
 
 import { ErrorCode } from './errors';
+import type { NextFunction } from 'express';
 
 export interface ApiError extends Error {
   statusCode: number;

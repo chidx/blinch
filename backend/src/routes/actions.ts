@@ -53,7 +53,7 @@ router.get(
     const { id } = req.params;
 
     // Validate action ID format
-    if (!id || id.length < 3) {
+    if (!id || (typeof id === 'string' && id.length < 3)) {
       throw new BlinchApiError(
         400,
         ErrorCode.INVALID_ACTION_ID,
@@ -61,8 +61,11 @@ router.get(
       );
     }
 
+    // Handle array of IDs (use first one)
+    const actionId = Array.isArray(id) ? id[0] : id;
+
     // Retrieve action from storage
-    const action = actionStore.get(id);
+    const action = actionStore.get(actionId);
 
     if (!action) {
       throw new BlinchApiError(
