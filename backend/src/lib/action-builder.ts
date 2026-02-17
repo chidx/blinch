@@ -8,7 +8,9 @@ import {
   ActionParameter,
   BlinchActionMetadata,
 } from '../types/action';
-import { PROTOCOL_PREFIX } from '@blinch/contracts/types';
+
+// Protocol prefix: "FLOW\x01" in hex (0x464c4f5701)
+const PROTOCOL_PREFIX = '464c4f5701';
 
 const DEFAULT_METADATA: BlinchActionMetadata = {
   protocol: 'Blinch',

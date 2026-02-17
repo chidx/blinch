@@ -7,7 +7,9 @@
 
 import { z } from 'zod';
 import type { CreateBlinchLinkParams, CreateBlinchLinkResult } from '../types';
-import { PROTOCOL_PREFIX } from '@blinch/contracts/types';
+
+// Protocol prefix: "FLOW\x01" in hex (0x464c4f5701)
+const PROTOCOL_PREFIX = '464c4f5701';
 
 /**
  * Input schema validation
