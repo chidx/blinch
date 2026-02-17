@@ -125,11 +125,14 @@ deploy_dev() {
 deploy_staging() {
     log_info "Deploying to staging..."
 
-    # Build Docker images
-    docker-compose build
+    # Build and start services
+    cd $BACKEND_DIR
+    pm2 start dist/server.js --name blinch-backend
+    cd ..
 
-    # Deploy to staging server
-    docker-compose -f docker-compose.staging.yml up -d
+    cd $FRONTEND_DIR
+    pm2 start node_modules/.bin/next --name blinch-frontend -- start
+    cd ..
 
     log_info "✓ Deployed to staging"
 }
@@ -156,8 +159,14 @@ deploy_production() {
     build_backend
     build_frontend
 
-    # Deploy using docker-compose
-    docker-compose up -d
+    # Deploy using PM2
+    cd $BACKEND_DIR
+    pm2 restart blinch-backend || pm2 start dist/server.js --name blinch-backend
+    cd ..
+
+    cd $FRONTEND_DIR
+    pm2 restart blinch-frontend || pm2 start node_modules/.bin/next --name blinch-frontend -- start
+    cd ..
 
     # Run smoke tests
     log_info "Running smoke tests..."

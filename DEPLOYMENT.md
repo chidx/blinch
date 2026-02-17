@@ -272,75 +272,7 @@ sudo systemctl reload nginx
 sudo certbot --nginx -d api.blinch.network
 ```
 
-### Option 2: Docker Deployment
-
-#### 1. Create Dockerfile
-
-**Backend** `Dockerfile`:
-```dockerfile
-FROM node:25.6.1-alpine
-
-WORKDIR /app
-
-COPY package*.json ./
-COPY tsconfig.json ./
-COPY src ./src
-
-RUN npm ci --only=production
-RUN npm run build
-
-EXPOSE 3001
-
-CMD ["node", "dist/server.js"]
-```
-
-#### 2. Build and Run
-
-```bash
-cd backend
-docker build -t blinch-backend .
-
-docker run -d \
-  --name blinch-backend \
-  -p 3001:3001 \
-  --env-file .env \
-  --restart unless-stopped \
-  blinch-backend
-```
-
-#### 3. Docker Compose (Recommended)
-
-**Root** `docker-compose.yml`:
-```yaml
-version: '3.8'
-
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=production
-      - NETWORK=chipnet
-    env_file:
-      - backend/.env
-    restart: unless-stopped
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - BACKEND_URL=http://backend:3001
-    restart: unless-stopped
-```
-
-Deploy:
-```bash
-docker-compose up -d
-```
-
-### Option 3: Cloud Platforms
+### Option 2: Cloud Platforms
 
 #### AWS ECS
 
@@ -667,10 +599,6 @@ pm2 logs blinch-backend
 pm2 logs blinch-frontend
 ```
 
-**Docker Logs:**
-```bash
-docker logs blinch-backend -f
-```
 
 **Systemd Logs:**
 ```bash
@@ -727,8 +655,6 @@ Set up alerts for:
 # PM2
 pm2 reload blinch-backend
 
-# Docker
-docker-compose pull && docker-compose up -d
 
 # Git
 git revert HEAD && git push
