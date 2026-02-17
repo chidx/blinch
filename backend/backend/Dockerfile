@@ -1,12 +1,14 @@
-# Blinch Backend Dockerfile
+# Backend Dockerfile
 FROM node:25.6.1-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
+# Copy package files
 COPY package*.json ./
 COPY tsconfig.json ./
-RUN npm install
+
+# Install dependencies
+RUN npm ci
 
 # Copy source code
 COPY src ./src
@@ -19,16 +21,14 @@ FROM node:25.6.1-alpine AS production
 
 WORKDIR /app
 
-# Install production dependencies
+# Copy package files
 COPY package*.json ./
-RUN npm install --production
+
+# Install production dependencies only
+RUN npm ci --only=production
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-
-# Install wget for health check
-RUN apk add --no-cache wget
 
 # Create non-root user
 RUN addgroup -g 1001 -S blinch && \
@@ -42,6 +42,10 @@ USER blinch
 
 # Expose port
 EXPOSE 3001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3001/api/health || exit 1
 
 # Start server
 CMD ["node", "dist/server.js"]
