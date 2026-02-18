@@ -1,17 +1,38 @@
+import './config.js'; // Load environment variables first
 import {
   Contract,
   ElectrumNetworkProvider,
   SignatureTemplate,
+  TransactionBuilder,
+  Network,
 } from 'cashscript';
-import * as fs from 'fs';
-import * as path from 'path';
-import { getCreatorCredentials, getRecipientPublicKey, validatePublicKey } from './wallet';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { getCreatorCredentials, getRecipientPublicKey, validatePublicKey } from './wallet.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface DeploymentConfig {
   network: 'chipnet' | 'testnet' | 'mainnet';
   mnemonic?: string;
   recipientPkh: string;
   timeoutBlocks: number;
+}
+
+// Convert string network to CashScript Network enum
+function getNetwork(network: string): Network {
+  switch (network) {
+    case 'chipnet':
+      return Network.CHIPNET;
+    case 'testnet':
+      return Network.TESTNET3;
+    case 'mainnet':
+      return Network.MAINNET;
+    default:
+      return Network.CHIPNET;
+  }
 }
 
 // Default configuration for Chipnet
@@ -27,7 +48,7 @@ class BlinchDeployer {
 
   constructor(config: DeploymentConfig) {
     this.config = config;
-    this.provider = new ElectrumNetworkProvider(config.network);
+    this.provider = new ElectrumNetworkProvider(getNetwork(config.network));
   }
 
   /**
@@ -55,7 +76,7 @@ class BlinchDeployer {
 
     // Calculate timeout (current block height + timeout)
     const currentHeight = await this.provider.getBlockHeight();
-    const timeout = currentHeight + this.config.timeoutBlocks;
+    const timeout = BigInt(currentHeight + this.config.timeoutBlocks);
 
     console.log(`📊 Current block height: ${currentHeight}`);
     console.log(`⏰ Timeout block: ${timeout} (+${this.config.timeoutBlocks} blocks)`);
@@ -80,22 +101,59 @@ class BlinchDeployer {
     console.log(`📜 Contract address: ${contract.address}`);
     console.log(`🔗 Redemption address: ${contract.address}`);
 
-    // Deploy the contract with some funding
+    // Deploy the contract with some funding using TransactionBuilder
     // For demo: 10,000 satoshis
-    const deployTx = await contract.deploy(
-      new SignatureTemplate(creatorCredentials.privateKey),
-      10000
-    );
+    const deployAmount = 10000n;
+
+    // Get funding UTXOs from creator's address
+    const utxos = await this.provider.getUtxos(creatorCredentials.address);
+    if (utxos.length === 0) {
+      throw new Error(
+        `No UTXOs found at creator address ${creatorCredentials.address}. ` +
+        `Please fund the address with at least ${deployAmount} satoshis.`
+      );
+    }
+
+    // Create deployment transaction
+    const builder = new TransactionBuilder({ provider: this.provider });
+
+    // Add inputs from creator's UTXOs
+    let inputTotal = 0n;
+    const sigTemplate = new SignatureTemplate(creatorCredentials.privateKey);
+    for (const utxo of utxos) {
+      builder.addInput(utxo, sigTemplate.unlockP2PKH());
+      inputTotal += BigInt(utxo.satoshis);
+      if (inputTotal >= deployAmount) break;
+    }
+
+    // Add output to fund the contract
+    builder.addOutput({
+      to: contract.address,
+      amount: deployAmount,
+    });
+
+    // Add change output if needed
+    const fee = 500n; // Minimum fee
+    if (inputTotal > deployAmount + fee) {
+      builder.addOutput({
+        to: creatorCredentials.address,
+        amount: inputTotal - deployAmount - fee,
+      });
+    }
+
+    // Send the deployment transaction
+    const deployTxHex = builder.build();
+    const deployTxId = await this.provider.sendRawTransaction(deployTxHex);
 
     console.log(`✅ Contract deployed successfully!`);
-    console.log(`📝 Transaction ID: ${deployTx.txid}`);
+    console.log(`📝 Transaction ID: ${deployTxId}`);
 
     // Save deployment info
     this.saveDeploymentInfo({
       network: this.config.network,
       contractAddress: contract.address,
-      transactionId: deployTx.txid,
-      timeout,
+      transactionId: deployTxId,
+      timeout: Number(timeout),
       creatorPk: creatorCredentials.publicKey,
       creatorAddress: creatorCredentials.address,
       recipientPk: recipientPublicKey,
@@ -106,7 +164,7 @@ class BlinchDeployer {
     return {
       contract,
       address: contract.address,
-      txId: deployTx.txid,
+      txId: deployTxId,
     };
   }
 
@@ -208,7 +266,8 @@ async function main() {
 }
 
 // Run if called directly
-if (require.main === module) {
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMainModule) {
   main().catch(console.error);
 }
 

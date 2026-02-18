@@ -2,13 +2,14 @@
   "name": "@blinch/contracts",
   "version": "1.0.0",
   "description": "CashScript smart contracts for Blinch protocol",
+  "type": "module",
   "main": "dist/Blinch.js",
   "types": "dist/Blinch.d.ts",
   "scripts": {
-    "build": "cashsc compile Blinch.cash --outdir dist",
-    "deploy:chipnet": "ts-node scripts/deploy.ts --network chipnet",
-    "deploy:testnet": "ts-node scripts/deploy.ts --network testnet",
-    "test": "cashsc test",
+    "build": "mkdir -p dist && cashc Blinch.cash --output dist/Blinch.json",
+    "deploy:chipnet": "node --import tsx/esm scripts/deploy.ts --network chipnet",
+    "deploy:testnet": "node --import tsx/esm scripts/deploy.ts --network testnet",
+    "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf dist"
   },
   "keywords": [
@@ -18,13 +19,16 @@
   ],
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "cashc": "^0.12.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.2"
   },
   "dependencies": {
     "cashscript": "^0.12.1",
+    "dotenv": "^17.3.1",
+    "electron": "^40.4.1",
     "encoding-down": "^7.1.0",
-    "leveldown": "^6.1.1",
-    "electron": "^33.2.0"
+    "leveldown": "^6.1.1"
   }
 }

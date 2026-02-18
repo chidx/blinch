@@ -19,8 +19,8 @@ Complete guide for deploying the Blinch protocol to production.
 
 ### Required Software
 
-- **Node.js**: v25.6.1 or higher
-- **npm**: v10.0.0 or higher
+- **Node.js**: v22.22.0 or higher
+- **npm**: v8.19.4 or higher
 - **Git**: v2.40.0 or higher
 - **TypeScript**: v5.7.2
 
