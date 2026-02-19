@@ -4,18 +4,20 @@
  */
 
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ActionCard from '@/components/ActionCard';
+import Image from 'next/image';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 /**
  * Generate metadata for the action page
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = params;
+  const { id } = await params;
 
   return {
     title: `Action ${id} - Blinch`,
@@ -32,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * Action page component
  */
 export default async function ActionPage({ params }: PageProps) {
-  const { id } = params;
+  const { id } = await params;
 
   // Fetch action data from backend via proxy
   const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001'}/api/action/${id}`, {
@@ -53,7 +55,14 @@ export default async function ActionPage({ params }: PageProps) {
         <div className="container mx-auto px-4 py-6">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <span className="text-xl font-bold">B</span>
+              <Image
+                src="/icon-md.png"
+                alt="Blinch"
+                width={40}
+                height={40}
+                className="rounded-2xl"
+                unoptimized
+              />
             </div>
             <h1 className="text-2xl font-bold gradient-text">Blinch</h1>
           </Link>

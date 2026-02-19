@@ -52,20 +52,22 @@ export default function ActionCard({ action }: ActionCardProps) {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-24 h-24 rounded-2xl glass flex items-center justify-center">
               <Image
-                src={action.icon}
+                src="/icon-lg.png"
                 alt={action.title}
-                width={64}
-                height={64}
-                className="rounded-lg"
+                width={90}
+                height={90}
+                className="rounded-2xl"
                 unoptimized
               />
             </div>
           </div>
         )}
         <div className="absolute top-4 right-4">
-          <span className="px-3 py-1 rounded-full text-xs font-medium bg-primary/20 border border-primary/30">
+          <button
+            className="px-3 py-1 rounded-full text-xs font-medium bg-primary/20 border border-primary/30 hover:bg-primary/30 hover:border-primary/50 transition-all cursor-pointer"
+          >
             {action.metadata.protocol}
-          </span>
+          </button>
         </div>
       </div>
 

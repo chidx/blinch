@@ -3,36 +3,13 @@
  */
 
 import Link from 'next/link';
+import Image from 'next/image';
+import { Navigation } from '@/components/Navigation';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-surface to-background">
-      {/* Header */}
-      <header className="border-b border-white/10 glass">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <span className="text-xl font-bold">B</span>
-              </div>
-              <h1 className="text-2xl font-bold gradient-text">Blinch</h1>
-            </div>
-            <nav className="flex items-center gap-6">
-              <Link href="/docs" className="text-sm text-gray-400 hover:text-white transition-colors">
-                Documentation
-              </Link>
-              <a
-                href="https://github.com/blinch/protocol"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                GitHub
-              </a>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
       {/* Hero Section */}
       <main className="container mx-auto px-4 py-16">
@@ -41,14 +18,20 @@ export default function HomePage() {
             Bitcoin Cash Interactive Blinks
           </h2>
           <p className="text-xl text-gray-400 mb-8">
-            A protocol for interactive Bitcoin Cash actions with covenant-based smart contracts
+            Create and share interactive Bitcoin Cash actions with covenant-based smart contracts
           </p>
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <Link
+              href="/create"
+              className="px-6 py-3 rounded-lg bg-gradient-to-r from-accent to-primary hover:opacity-90 transition-opacity font-medium shadow-lg shadow-accent/20"
+            >
+              Create Your Blinch
+            </Link>
             <Link
               href="/action/example"
               className="px-6 py-3 rounded-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity font-medium"
             >
-              Try Example Action
+              Try Example
             </Link>
             <Link
               href="/docs"
@@ -113,7 +96,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-white/10 mt-16">
         <div className="container mx-auto px-4 py-8 text-center text-gray-500 text-sm">
-          <p>Blinch Protocol - Built for BCH-1 Hackcelerator</p>
+          <p>Blinch Protocol</p>
           <p className="mt-2">Powered by CashScript • Next.js 16 • Bitcoin Cash</p>
         </div>
       </footer>

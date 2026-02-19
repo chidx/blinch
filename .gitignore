@@ -40,3 +40,5 @@ yarn-error.log*
 # Beads
 .beads/*.db
 .beads/.jsonl.lock
+backend/data/
+frontend/.env.local

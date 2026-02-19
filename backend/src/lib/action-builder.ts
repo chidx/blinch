@@ -29,6 +29,9 @@ export function buildBitcoinCashUri(params: {
 }): string {
   const { address, amount, opReturnData, actionType } = params;
 
+  // Strip bitcoincash: prefix if present (we add it back)
+  const cleanAddress = address.replace(/^bitcoincash:/, '');
+
   // Build URI parameters
   const uriParams = new URLSearchParams();
 
@@ -43,7 +46,7 @@ export function buildBitcoinCashUri(params: {
 
   uriParams.set('op_return', opReturn);
 
-  return `bitcoincash:${address}?${uriParams.toString()}`;
+  return `bitcoincash:${cleanAddress}?${uriParams.toString()}`;
 }
 
 /**
