@@ -13,6 +13,7 @@ import {
 } from '../lib/action-builder';
 import { BlinchApiError, ErrorCode } from '../types/errors';
 import { getActionStore, initializeActionStore } from '../storage/index.js';
+import { canCreateAction } from '../services/tierService.js';
 import type { BlinchActionSchema } from '../types/action';
 
 const router = Router();
@@ -270,6 +271,46 @@ router.post(
         ErrorCode.INVALID_ADDRESS,
         'Invalid creator Bitcoin Cash address format'
       );
+    }
+
+    // Check tier limits (if creator address provided)
+    const parametersCount = parameters?.length || 0;
+    if (creatorAddress) {
+      const tierCheck = await canCreateAction(creatorAddress, parametersCount);
+
+      if (!tierCheck.allowed) {
+        if (tierCheck.paymentRequired) {
+          // Return 402 with payment requirements
+          const { getUpgradePaymentRequirements } = await import('../services/tierService.js');
+          const paymentReq = getUpgradePaymentRequirements(creatorAddress);
+
+          if (paymentReq) {
+            res.setHeader('X-Payment-Link', `bitcoincash:${paymentReq.recipient}?amount=${paymentReq.amount / 100000000}&op_return=464c4f5701${paymentReq.actionType}`);
+            res.setHeader('X-Payment-Amount', paymentReq.amount.toString());
+            res.setHeader('X-Payment-Currency', 'sat');
+            res.setHeader('X-Payment-Description', paymentReq.description);
+
+            return res.status(402).json({
+              error: {
+                code: 'PAYMENT_REQUIRED',
+                message: tierCheck.reason,
+                tier_limit: 'FREE',
+                payment_required: true,
+                payment_link: paymentReq.recipient,
+                payment_amount: paymentReq.amount,
+                payment_currency: 'sat',
+                feature: 'premium_upgrade',
+              },
+            });
+          }
+        }
+
+        throw new BlinchApiError(
+          403,
+          ErrorCode.FORBIDDEN,
+          tierCheck.reason || 'Tier limit exceeded'
+        );
+      }
     }
 
     // Build the action schema

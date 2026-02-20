@@ -9,7 +9,7 @@ import { BlinchApiError, ErrorCode } from '../types/errors';
  * Wrap async functions to catch errors
  */
 export function asyncHandler(
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, any>>
 ) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
