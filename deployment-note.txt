@@ -1,0 +1,29 @@
+Deployment Summary                                                                                  
+                                                                                                      
+  Successfully deployed the Blinch contract to Chipnet!                                               
+                                                                                                      
+  Contract Details                                                                                    
+                                                                                                      
+  - Contract Address: bchtest:pwzxslgat0u4879tfqvmuv5eh3kky5d4ekwc7pzlc6zmqa46tm3myw7z9u0du           
+  - Transaction ID: 1512b1909ac88d07b4bad4966810a9d6a88a05638d42f8d4cb1253135f814ccc                  
+  - Creator Address: bchtest:qpntz7207trgrekq50jly9yqwteurej3nc0qr4arxr
+  - Recipient Public Key: 02be8602a91db05c4fc85af1f299ecbbd9d7c1fd163f7140aa7bf93a5280e7fb6a
+  - Timeout Block: 293591 (144 blocks from deployment at block 293447)
+  - Current Block: 293447
+
+  Explorer
+
+  View the transaction:
+  https://chipnet.net/api/tx/1512b1909ac88d07b4bad4966810a9d6a88a05638d42f8d4cb1253135f814ccc
+
+  Fixes Applied
+
+  1. Updated to use tsx instead of ts-node for ESM compatibility
+  2. Fixed CashScript Network enum usage (Network.CHIPNET)
+  3. Updated contract deployment to use TransactionBuilder (contract.deploy() was removed in
+  CashScript 0.12)
+  4. Fixed address derivation using libauth's encodeCashAddress
+  5. Added proper BigInt handling for timeout parameter
+  6. Added dotenv configuration loading
+
+  The contract is now ready to use!

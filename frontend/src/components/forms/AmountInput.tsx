@@ -16,6 +16,8 @@ interface AmountInputProps {
   defaultValue?: string;
   allowCustom?: boolean;
   className?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
@@ -30,19 +32,32 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
       defaultValue,
       allowCustom = false,
       className = '',
+      value: controlledValue,
+      onChange: controlledOnChange,
     },
     ref
   ) => {
-    const [value, setValue] = useState(defaultValue || '');
+    const [internalValue, setInternalValue] = useState(defaultValue || '');
     const [touched, setTouched] = useState(false);
     const [customAmount, setCustomAmount] = useState(false);
     const [internalError, setInternalError] = useState<string | null>(null);
+
+    // Use controlled value if provided, otherwise use internal state
+    const value = controlledValue !== undefined ? controlledValue : internalValue;
 
   const showError = touched && (internalError || externalError);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    setValue(newValue);
+
+    if (controlledValue === undefined) {
+      setInternalValue(newValue);
+    }
+
+    // Call controlled onChange if provided
+    if (controlledOnChange) {
+      controlledOnChange(e);
+    }
 
     if (touched && newValue) {
       const num = parseFloat(newValue);
@@ -70,7 +85,15 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
   };
 
   const handlePresetClick = (presetAmount: string) => {
-    setValue(presetAmount);
+    if (controlledValue === undefined) {
+      setInternalValue(presetAmount);
+    } else if (controlledOnChange) {
+      // Create a synthetic event for controlled mode
+      const syntheticEvent = {
+        target: { value: presetAmount },
+      } as React.ChangeEvent<HTMLInputElement>;
+      controlledOnChange(syntheticEvent);
+    }
     setCustomAmount(false);
     setInternalError(null);
   };
@@ -78,10 +101,14 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
   const handleCustomToggle = () => {
     if (allowCustom) {
       setCustomAmount(!customAmount);
-      if (!customAmount) {
-        setValue('');
-      } else {
-        setValue('0.01');
+      const newValue = !customAmount ? '' : '0.01';
+      if (controlledValue === undefined) {
+        setInternalValue(newValue);
+      } else if (controlledOnChange && newValue) {
+        const syntheticEvent = {
+          target: { value: newValue },
+        } as React.ChangeEvent<HTMLInputElement>;
+        controlledOnChange(syntheticEvent);
       }
     }
   };
@@ -175,6 +202,9 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           Recipient will receive: <span className="text-white font-medium">{value} BCH</span>
         </p>
       )}
+    </div>
+  );
+}
+);
 
 AmountInput.displayName = 'AmountInput';
-

@@ -135,7 +135,7 @@ export function ActionList({ actions, onUpdate }: ActionListProps) {
                     {action.actionType}
                   </span>
                 )}
-                {action.parameters.length > 0 && (
+                {action.parameters && action.parameters.length > 0 && (
                   <span className="px-2 py-0.5 rounded bg-white/10 text-gray-400 text-xs">
                     {action.parameters.length} params
                   </span>

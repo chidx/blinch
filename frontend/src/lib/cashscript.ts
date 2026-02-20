@@ -3,19 +3,20 @@
  *
  * This module provides utilities for building transactions with CashScript
  * Ensures OP_RETURN with 464c4f5701 prefix is always included
+ *
+ * NOTE: This is a placeholder implementation pending CashScript SDK integration
  */
-
-import {
-  Contract,
-  ElectrumNetworkProvider,
-  SignatureTemplate,
-  Tx,
-} from 'cashscript';
 
 const PROTOCOL_PREFIX = '464c4f5701'; // FLOW\x01
 
 /**
  * Build a Blinch transaction with mandatory OP_RETURN
+ *
+ * TODO: Implement with CashScript SDK v0.12.1
+ * - Import Contract, ElectrumNetworkProvider, SignatureTemplate from 'cashscript'
+ * - Create contract instance with artifact and constructor arguments
+ * - Build transaction using contract.functions
+ * - Add OP_RETURN output with PROTOCOL_PREFIX + actionData
  */
 export async function buildBlinchTransaction(params: {
   contractAddress: string;
@@ -24,49 +25,16 @@ export async function buildBlinchTransaction(params: {
   recipientAddress: string;
   amount: number;
   actionData?: string;
-  network?: 'chipnet' | 'testnet' | 'mainnet';
+  network?: 'chipnet' | 'testnet3' | 'mainnet';
 }): Promise<{
-  tx: Tx;
+  tx: any;
   hex: string;
 }> {
-  const {
-    contractAddress,
-    artifact,
-    creatorKey,
-    recipientAddress,
-    amount,
-    actionData = '',
-    network = 'chipnet',
-  } = params;
-
-  // Initialize network provider
-  const provider = new ElectrumNetworkProvider(network);
-
-  // Create contract instance
-  const contract = new Contract(artifact, [creatorKey, recipientAddress], {
-    provider,
-  });
-
-  // Build OP_RETURN output
+  // Placeholder implementation
+  const { actionData = '' } = params;
   const opReturnData = PROTOCOL_PREFIX + actionData;
 
-  // Build transaction
-  const tx = await contract.functions.execute(
-    new SignatureTemplate(creatorKey),
-    recipientAddress
-  );
-
-  // Add OP_RETURN output
-  tx.outputs.push({
-    to: contract.address,
-    amount: 0,
-    opReturn: Buffer.from(opReturnData, 'hex'),
-  });
-
-  return {
-    tx,
-    hex: tx.hex(),
-  };
+  throw new Error('CashScript integration not yet implemented. OP_RETURN would be: ' + opReturnData);
 }
 
 /**
@@ -74,16 +42,9 @@ export async function buildBlinchTransaction(params: {
  */
 export async function broadcastTransaction(
   txHex: string,
-  network: 'chipnet' | 'testnet' | 'mainnet' = 'chipnet'
+  network: 'chipnet' | 'testnet3' | 'mainnet' = 'chipnet'
 ): Promise<string> {
-  const provider = new ElectrumNetworkProvider(network);
-
-  try {
-    const txid = await provider.sendRawTransaction(txHex);
-    return txid;
-  } catch (error) {
-    throw new Error(`Failed to broadcast: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
+  throw new Error('Transaction broadcasting not yet implemented');
 }
 
 /**

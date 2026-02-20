@@ -16,6 +16,7 @@ interface AddressInputProps {
   defaultValue?: string;
   onChange?: (address: string, isValid: boolean) => void;
   className?: string;
+  value?: string;
 }
 
 // Basic BCH address validation
@@ -44,12 +45,16 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
       defaultValue,
       onChange,
       className = '',
+      value: controlledValue,
     },
     ref
   ) => {
-    const [value, setValue] = useState(defaultValue || '');
+    const [internalValue, setInternalValue] = useState(defaultValue || '');
     const [touched, setTouched] = useState(false);
     const [internalError, setInternalError] = useState<string | null>(null);
+
+    // Use controlled value if provided, otherwise use internal state
+    const value = controlledValue !== undefined ? controlledValue : internalValue;
 
     const isValid = validateBchAddress(value);
     const showError = touched && (internalError || externalError);
@@ -62,7 +67,10 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    setValue(newValue);
+
+    if (controlledValue === undefined) {
+      setInternalValue(newValue);
+    }
 
     if (touched && newValue) {
       if (!validateBchAddress(newValue)) {
@@ -146,6 +154,8 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
       )}
     </div>
   );
+}
+);
 
 AddressInput.displayName = 'AddressInput';
 

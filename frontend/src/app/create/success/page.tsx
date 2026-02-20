@@ -4,13 +4,13 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Navigation } from '@/components/Navigation';
 import { getActionById } from '@/lib/storage';
 import type { StoredAction } from '@/lib/storage';
 
-export default function CreateSuccessPage() {
+function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const actionId = searchParams.get('id');
@@ -208,5 +208,22 @@ export default function CreateSuccessPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function CreateSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-background via-surface to-background">
+        <Navigation />
+        <main className="container mx-auto px-4 py-16">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="animate-pulse">Loading...</div>
+          </div>
+        </main>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }

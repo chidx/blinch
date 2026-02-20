@@ -18,6 +18,8 @@ interface InputFieldProps {
   maxLength?: number;
   rows?: number;
   className?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
 export const InputField = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputFieldProps>(
@@ -34,14 +36,23 @@ export const InputField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Inp
       maxLength,
       rows = 3,
       className = '',
+      value: controlledValue,
+      onChange: controlledOnChange,
     },
     ref
   ) => {
     const [touched, setTouched] = useState(false);
-    const [value, setValue] = useState(defaultValue || '');
+    const [internalValue, setInternalValue] = useState(defaultValue || '');
+
+    // Use controlled value if provided, otherwise use internal state
+    const value = controlledValue !== undefined ? controlledValue : internalValue;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      setValue(e.target.value);
+      if (controlledOnChange) {
+        controlledOnChange(e);
+      } else {
+        setInternalValue(e.target.value);
+      }
     };
 
     const handleBlur = () => {
@@ -56,7 +67,6 @@ export const InputField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Inp
       onChange: handleChange,
       onBlur: handleBlur,
       maxLength,
-      ref,
     };
 
     const baseInputClasses = `
@@ -77,12 +87,14 @@ export const InputField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Inp
         {type === 'textarea' ? (
           <textarea
             {...inputProps}
+            ref={ref as React.RefObject<HTMLTextAreaElement>}
             rows={rows}
             className={baseInputClasses}
           />
         ) : (
           <input
             {...inputProps}
+            ref={ref as React.RefObject<HTMLInputElement>}
             type={type}
             className={baseInputClasses}
           />

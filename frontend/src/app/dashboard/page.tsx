@@ -89,7 +89,7 @@ export default function DashboardPage() {
               <div className="glass rounded-lg p-4">
                 <p className="text-sm text-gray-500">With Parameters</p>
                 <p className="text-2xl font-bold">
-                  {actions.filter((a) => a.parameters.length > 0).length}
+                  {actions.filter((a) => a.parameters && a.parameters.length > 0).length}
                 </p>
               </div>
               <div className="glass rounded-lg p-4">
