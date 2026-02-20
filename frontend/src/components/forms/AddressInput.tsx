@@ -146,6 +146,6 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
       )}
     </div>
   );
-}
 
 AddressInput.displayName = 'AddressInput';
+

@@ -175,8 +175,6 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
           Recipient will receive: <span className="text-white font-medium">{value} BCH</span>
         </p>
       )}
-    </div>
-  );
-}
 
 AmountInput.displayName = 'AmountInput';
+

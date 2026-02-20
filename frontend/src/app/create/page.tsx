@@ -8,8 +8,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navigation } from '@/components/Navigation';
 import { InputField, AddressInput, AmountInput, ParameterBuilder } from '@/components/forms';
+import { PaymentRequiredModal } from '@/components/tiers';
 import type { ActionParameter } from '@/components/forms';
 import { createActionFromRequest, saveAction } from '@/lib/storage';
+import { isPaymentRequired, getPaymentRequirement } from '@/lib/tierApi';
 
 type FormStep = 1 | 2 | 3 | 4;
 
@@ -54,6 +56,10 @@ export default function CreateActionPage() {
   const [formData, setFormData] = useState<FormData>(DEFAULT_FORM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentRequirement, setPaymentRequirement] = useState<any>(null);
 
   const updateFormData = (updates: Partial<FormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -137,6 +143,15 @@ export default function CreateActionPage() {
         body: JSON.stringify(actionRequest),
       });
 
+      // Handle 402 Payment Required
+      if (isPaymentRequired(response)) {
+        const paymentReq = await getPaymentRequirement(response.clone());
+        setIsSubmitting(false);
+        setPaymentRequirement(paymentReq);
+        setShowPaymentModal(true);
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error?.message || 'Failed to create action');
@@ -156,6 +171,7 @@ export default function CreateActionPage() {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create action';
       alert(`Error: ${errorMessage}`);
       setIsSubmitting(false);
+      setShowPaymentModal(false);
     }
   };
 
@@ -427,6 +443,19 @@ export default function CreateActionPage() {
           </div>
         </div>
       </main>
+
+      {/* Payment Required Modal */}
+      {showPaymentModal && paymentRequirement && (
+        <PaymentRequiredModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setPaymentRequirement(null);
+          }}
+          reason={paymentRequirement.message || paymentRequirement.error?.message || 'Premium upgrade required'}
+          paymentDetails={paymentRequirement}
+        />
+      )}
     </div>
   );
 }
