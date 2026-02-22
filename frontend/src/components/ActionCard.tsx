@@ -2,7 +2,7 @@
  * ActionCard Component
  *
  * Renders a Blinch action from BCH-Action JSON Schema
- * Handles wallet connection and transaction execution
+ * Handles URI-based transaction execution with post-execution verification
  */
 
 'use client';
@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import type { BlinchAction, ActionLink } from '../types/action';
+import TransactionVerification from './TransactionVerification';
 
 interface ActionCardProps {
   action: BlinchAction;
@@ -31,10 +32,10 @@ export default function ActionCard({ action }: ActionCardProps) {
       const uri = actionLink.href;
       console.log('Executing action:', uri);
 
-      // For now, just open the BCH URI in a wallet
-      // In a full implementation, this would integrate with CashScript SDK
+      // Open the BCH URI in user's wallet
       window.location.href = uri;
 
+      // Show success state with verification UI
       setSuccess(true);
     } catch (err) {
       console.error('Execution error:', err);
@@ -99,7 +100,7 @@ export default function ActionCard({ action }: ActionCardProps) {
                 {/* Action Button */}
                 <button
                   onClick={() => handleExecute(actionLink)}
-                  disabled={isExecuting || success}
+                  disabled={isExecuting}
                   className="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-primary to-secondary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
                 >
                   {isExecuting ? (
@@ -124,12 +125,12 @@ export default function ActionCard({ action }: ActionCardProps) {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      Executing...
+                      Opening Wallet...
                     </span>
-                  ) : success ? (
+                  ) : (
                     <span className="flex items-center justify-center gap-2">
                       <svg
-                        className="h-5 w-5"
+                        className="w-5 h-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -138,13 +139,11 @@ export default function ActionCard({ action }: ActionCardProps) {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M5 13l4 4L19 7"
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
                         />
                       </svg>
-                      Action Executed!
+                      {actionLink.label}
                     </span>
-                  ) : (
-                    actionLink.label
                   )}
                 </button>
 
@@ -182,13 +181,24 @@ export default function ActionCard({ action }: ActionCardProps) {
           </div>
         )}
 
-        {/* Success Display */}
+        {/* Post-Execution Verification UI */}
         {success && (
-          <div className="mt-4 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-            <p className="text-green-400 text-sm">
-              ✓ Action executed successfully! Check your wallet for the transaction.
-            </p>
-          </div>
+          <>
+            <div className="mt-4 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+              <p className="text-green-400 text-sm mb-2">
+                ✓ Transaction initiated! Your wallet should have opened.
+              </p>
+              <p className="text-xs text-gray-400">
+                Complete the transaction in your wallet, then use the verification tool below.
+              </p>
+            </div>
+
+            <TransactionVerification
+              protocolPrefix={action.metadata.hex_prefix}
+              network="chipnet"
+              actionTitle={action.title}
+            />
+          </>
         )}
 
         {/* Footer Info */}
@@ -203,7 +213,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             >
               CashScript
             </a>{' '}
-            • Bitcoin Cash
+            • Bitcoin Cash URI Protocol
           </p>
         </div>
       </div>
