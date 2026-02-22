@@ -35,7 +35,7 @@ interface FormData {
 const DEFAULT_FORM_DATA: FormData = {
   title: '',
   description: '',
-  iconUrl: 'https://blinch.network/assets/icon.png',
+  iconUrl: '/icon-lg.png',
   recipientAddress: '',
   amount: '0.01',
   customAmount: false,
@@ -45,9 +45,7 @@ const DEFAULT_FORM_DATA: FormData = {
 };
 
 const ICON_PRESETS = [
-  'https://blinch.network/assets/icon.png',
-  'https://blinch.network/assets/tip-icon.png',
-  'https://blinch.network/assets/donate-icon.png',
+  '/icon-lg.png',
 ];
 
 export default function CreateActionPage() {
@@ -127,7 +125,7 @@ export default function CreateActionPage() {
         description: formData.description,
         recipientAddress: formData.recipientAddress,
         amount: formData.amount,
-        iconUrl: formData.iconUrl !== 'https://blinch.network/assets/icon.png' ? formData.iconUrl : undefined,
+        iconUrl: formData.iconUrl !== '/icon-lg.png' ? formData.iconUrl : undefined,
         actionType: formData.actionType || undefined,
         parameters: formData.parameters.length > 0 ? formData.parameters : undefined,
         creatorAddress: formData.creatorAddress || undefined,
@@ -416,7 +414,7 @@ export default function CreateActionPage() {
                 type="button"
                 onClick={handleBack}
                 disabled={step === 1}
-                className="px-6 py-2.5 rounded-lg glass hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                className="px-6 py-2.5 rounded-lg glass hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium cursor-pointer"
               >
                 Back
               </button>
@@ -425,7 +423,7 @@ export default function CreateActionPage() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity font-medium"
+                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-primary to-secondary border border-white hover:opacity-90 transition-opacity font-medium cursor-pointer"
                 >
                   Next
                 </button>
@@ -434,7 +432,7 @@ export default function CreateActionPage() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-accent to-primary hover:opacity-90 transition-opacity font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-accent to-primary border border-white hover:opacity-90 transition-opacity font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Action'}
                 </button>

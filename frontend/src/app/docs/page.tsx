@@ -88,7 +88,7 @@ export default function DocsPage() {
             <code>{`{
   "version": "1.1.0",
   "type": "action",
-  "icon": "https://blinch.network/assets/icon.png",
+  "icon": "/icon-lg.png",
   "title": "Interactive Blinch Action",
   "description": "Metadata for a Bitcoin Cash interactive link.",
   "links": {

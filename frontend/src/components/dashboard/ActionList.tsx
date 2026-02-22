@@ -115,7 +115,7 @@ export function ActionList({ actions, onUpdate }: ActionListProps) {
               {/* Header */}
               <div className="flex items-start gap-3 mb-3">
                 <img
-                  src={action.iconUrl || 'https://blinch.network/assets/icon.png'}
+                  src={action.iconUrl || '/icon-lg.png'}
                   alt={action.title}
                   className="w-12 h-12 rounded-lg"
                 />

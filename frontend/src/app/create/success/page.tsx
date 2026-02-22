@@ -51,7 +51,8 @@ function SuccessContent() {
   }
 
   const actionUrl = typeof window !== 'undefined' ? `${window.location.origin}/action/${action.id}` : '';
-  const bchUri = `bitcoincash:${action.recipientAddress}?amount=${action.amount || '0'}&op_return=464c4f5701${action.actionType || ''}`;
+  const prefix = action.recipientAddress.includes(':') ? '' : 'bitcoincash:';
+  const bchUri = `${prefix}${action.recipientAddress}?amount=${action.amount || '0'}&op_return=464c4f5701${action.actionType || ''}`;
 
   const handleCopy = (type: 'url' | 'id', value: string) => {
     navigator.clipboard.writeText(value);
@@ -79,7 +80,7 @@ function SuccessContent() {
           <div className="glass-strong rounded-xl p-6 mb-6">
             <div className="flex items-start gap-4 mb-4">
               <img
-                src={action.iconUrl || 'https://blinch.network/assets/icon.png'}
+                src={action.iconUrl || '/icon-lg.png'}
                 alt={action.title}
                 className="w-16 h-16 rounded-lg"
               />
@@ -194,13 +195,13 @@ function SuccessContent() {
           <div className="mt-8 flex gap-4">
             <button
               onClick={() => router.push(actionUrl)}
-              className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity font-medium"
+              className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r glass cursor-pointer from-primary to-secondary hover:opacity-90 transition-opacity font-medium"
             >
               View Action
             </button>
             <button
               onClick={() => router.push('/create')}
-              className="px-6 py-3 rounded-lg glass hover:bg-white/5 transition-colors font-medium"
+              className="flex-1 px-6 py-3 rounded-lg glass cursor-pointer hover:bg-white/5 transition-colors font-medium"
             >
               Create Another
             </button>

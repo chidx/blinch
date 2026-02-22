@@ -29,8 +29,10 @@ export function buildBitcoinCashUri(params: {
 }): string {
   const { address, amount, opReturnData, actionType } = params;
 
-  // Strip bitcoincash: prefix if present (we add it back)
-  const cleanAddress = address.replace(/^bitcoincash:/, '');
+  // Determine network prefix and strip it if present
+  const isTestnet = /^bchtest:/i.test(address);
+  const cleanAddress = address.replace(/^(bitcoincash:|bchtest:)/i, '');
+  const prefix = isTestnet ? 'bchtest' : 'bitcoincash';
 
   // Build URI parameters
   const uriParams = new URLSearchParams();
@@ -46,7 +48,7 @@ export function buildBitcoinCashUri(params: {
 
   uriParams.set('op_return', opReturn);
 
-  return `bitcoincash:${cleanAddress}?${uriParams.toString()}`;
+  return `${prefix}:${cleanAddress}?${uriParams.toString()}`;
 }
 
 /**
@@ -113,15 +115,18 @@ export function buildBlinchAction(params: {
 }
 
 /**
- * Validate Bitcoin Cash address format
+ * Validate Bitcoin Cash address format (supports both mainnet and testnet)
  */
 export function validateBchAddress(address: string): boolean {
-  // Basic validation for BCH address formats
-  // Supports: bitcoincash: prefix, legacy addresses, new addresses
-  const bchAddressRegex = /^(bitcoincash:)?[1-9A-HJ-NP-Za-km-z]{42}$/;
-  const legacyAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{34}$/;
+  if (!address) return false;
 
-  return bchAddressRegex.test(address) || legacyAddressRegex.test(address);
+  // Remove mainnet or testnet prefix if present
+  const cleanAddress = address.replace(/^(bitcoincash:|bchtest:)/i, '');
+
+  // Accept addresses between 34-54 alphanumeric characters (permissive for testnet variations)
+  const isValidFormat = cleanAddress.length >= 34 && cleanAddress.length <= 54 && /^[a-zA-Z0-9]+$/.test(cleanAddress);
+
+  return isValidFormat;
 }
 
 /**

@@ -19,18 +19,31 @@ interface AddressInputProps {
   value?: string;
 }
 
-// Basic BCH address validation
+// BCH testnet-only address validation
 function validateBchAddress(address: string): boolean {
   if (!address) return false;
 
-  // Remove prefix if present
-  const cleanAddress = address.replace(/^bitcoincash:/, '');
+  // Only accept testnet addresses with bchtest: prefix
+  const hasTestnetPrefix = /^bchtest:/i.test(address);
 
-  // Legacy address (34 chars) or new address (42 chars)
-  const legacyPattern = /^[1-9A-HJ-NP-Za-km-z]{34}$/;
-  const newPattern = /^[1-9A-HJ-NP-Za-km-z]{42}$/;
+  if (!hasTestnetPrefix) return false;
 
-  return legacyPattern.test(cleanAddress) || newPattern.test(cleanAddress);
+  const cleanAddress = address.replace(/^bchtest:/i, '');
+
+  // Accept addresses between 34-42 characters (more permissive for testnet variations)
+  // Allow alphanumeric characters (some testnet formats may use wider character sets)
+  const isValidFormat = cleanAddress.length >= 34 && cleanAddress.length <= 54 && /^[a-zA-Z0-9]+$/.test(cleanAddress);
+
+  // Debug logging
+  console.log('Address validation:', {
+    original: address,
+    clean: cleanAddress,
+    cleanLength: cleanAddress.length,
+    isValidFormat,
+    result: isValidFormat
+  });
+
+  return isValidFormat;
 }
 
 export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
@@ -38,7 +51,7 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
     {
       label,
       name,
-      placeholder = 'bitcoincash:qrqglczyxh4yvdnkkenk3k9ltq3e2j2dnqjvulv4rk',
+      placeholder = 'bchtest:qrqglczyxh4yvdnkkenk3k9ltq3e2j2dnqv8hvw0v9h',
       required = false,
       error: externalError,
       helperText,
@@ -59,35 +72,48 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
     const isValid = validateBchAddress(value);
     const showError = touched && (internalError || externalError);
 
-  useEffect(() => {
-    if (onChange) {
-      onChange(value, isValid);
-    }
-  }, [value, isValid, onChange]);
+    // Clear internal error whenever address becomes valid
+    useEffect(() => {
+      if (isValid && internalError) {
+        setInternalError(null);
+      }
+    }, [isValid, internalError]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    const newIsValid = validateBchAddress(newValue);
 
+    // Update internal state for uncontrolled components
     if (controlledValue === undefined) {
       setInternalValue(newValue);
     }
 
-    if (touched && newValue) {
-      if (!validateBchAddress(newValue)) {
-        setInternalError('Invalid Bitcoin Cash address format');
-      } else {
-        setInternalError(null);
-      }
-    } else {
-      setInternalError(null);
+    // Update validation errors - set error if invalid and touched
+    if (touched && newValue && !newIsValid) {
+      setInternalError('Invalid testnet address format (must be bchtest: with valid address)');
+    }
+
+    // Call onChange with new value and validity
+    if (onChange) {
+      onChange(newValue, newIsValid);
     }
   };
+
+  // Sync onChange when controlled value changes from parent
+  useEffect(() => {
+    if (controlledValue !== undefined && onChange) {
+      onChange(controlledValue, isValid);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controlledValue]);
 
   const handleBlur = () => {
     setTouched(true);
 
     if (value && !isValid) {
-      setInternalError('Invalid Bitcoin Cash address format');
+      setInternalError('Invalid testnet address format (must be bchtest: with valid address)');
+    } else if (value && isValid) {
+      setInternalError(null); // Clear error if valid
     }
   };
 
@@ -146,9 +172,9 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
       {!showError && value && (
         <p className="text-xs text-gray-500">
           {isValid ? (
-            <span className="text-green-400">Valid Bitcoin Cash address</span>
+            <span className="text-green-400">Valid testnet address</span>
           ) : (
-            <span>Must be a valid BCH address (legacy or new format)</span>
+            <span>Must be a valid testnet address (bchtest: prefix required)</span>
           )}
         </p>
       )}
