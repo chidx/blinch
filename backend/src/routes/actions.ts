@@ -8,6 +8,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import {
   buildBlinchAction,
+  buildContractBlinchAction,
   validateBchAddress,
   validateActionParameters,
 } from '../lib/action-builder';
@@ -149,6 +150,10 @@ router.get(
  * - actionType: string (optional) - Custom action type identifier
  * - parameters: array (optional) - Action parameters
  * - creatorAddress: string (optional) - Creator's BCH address for ownership
+ *
+ * Query params:
+ * - useContract: boolean (optional) - If true, use smart contract instead of direct payment
+ * - network: string (optional) - Network for contract (default: chipnet)
  */
 router.post(
   '/',
@@ -163,6 +168,10 @@ router.post(
       parameters,
       creatorAddress,
     } = req.body;
+
+    // Check if contract mode is enabled
+    const useContract = req.query.useContract === 'true';
+    const network = (req.query.network as string) || 'chipnet';
 
     // Validate required fields
     if (!title || !description || !recipientAddress) {
@@ -314,16 +323,28 @@ router.post(
     }
 
     // Build the action schema
-    const actionSchema = buildBlinchAction({
-      id: 'temp-id', // Will be replaced by store
-      title,
-      description,
-      recipientAddress,
-      amount,
-      iconUrl,
-      actionType,
-      parameters,
-    });
+    const actionSchema = useContract
+      ? buildContractBlinchAction({
+          id: 'temp-id', // Will be replaced by store
+          title,
+          description,
+          recipientAddress,
+          amount,
+          iconUrl,
+          actionType,
+          parameters,
+          network,
+        })
+      : buildBlinchAction({
+          id: 'temp-id', // Will be replaced by store
+          title,
+          description,
+          recipientAddress,
+          amount,
+          iconUrl,
+          actionType,
+          parameters,
+        });
 
     // Create action in store (generates unique ID)
     const result = await actionStore.create(actionSchema, creatorAddress);

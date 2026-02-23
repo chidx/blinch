@@ -3,13 +3,14 @@
  *
  * Renders a Blinch action from BCH-Action JSON Schema
  * Handles URI-based transaction execution with post-execution verification
+ * Displays contract information when available
  */
 
 'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
-import type { BlinchAction, ActionLink } from '../types/action';
+import type { BlinchAction, ActionLink, ContractInfo } from '../types/action';
 import TransactionVerification from './TransactionVerification';
 
 interface ActionCardProps {
@@ -22,6 +23,7 @@ export default function ActionCard({ action }: ActionCardProps) {
   const [success, setSuccess] = useState(false);
 
   const primaryAction = action.links.actions[0];
+  const contractInfo = action.metadata.contract_info;
 
   const handleExecute = async (actionLink: ActionLink) => {
     setIsExecuting(true);
@@ -63,7 +65,15 @@ export default function ActionCard({ action }: ActionCardProps) {
             </div>
           </div>
         )}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 flex gap-2">
+          {contractInfo && (
+            <button
+              className="px-3 py-1 rounded-full text-xs font-medium bg-accent/20 border border-accent/30 hover:bg-accent/30 hover:border-accent/50 transition-all cursor-pointer"
+              title="Protected by Smart Contract"
+            >
+              🔒 Smart Contract
+            </button>
+          )}
           <button
             className="px-3 py-1 rounded-full text-xs font-medium bg-primary/20 border border-primary/30 hover:bg-primary/30 hover:border-primary/50 transition-all cursor-pointer"
           >
@@ -91,6 +101,48 @@ export default function ActionCard({ action }: ActionCardProps) {
             <span className="font-mono text-accent">{action.metadata.hex_prefix}</span>
           </div>
         </div>
+
+        {/* Contract Information */}
+        {contractInfo && (
+          <div className="mb-6 p-4 rounded-lg bg-accent/10 border border-accent/30">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-accent text-lg">🔐</span>
+              <h3 className="font-semibold text-accent">Smart Contract Protection</h3>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Contract Address</span>
+                <span className="font-mono text-xs text-accent truncate max-w-[200px]">
+                  {contractInfo.address}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Status</span>
+                <span className={`font-medium ${contractInfo.status === 'active' ? 'text-green-400' : 'text-red-400'}`}>
+                  {contractInfo.status === 'active' ? '● Active' : '● Expired'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Timeout Block</span>
+                <span className="font-mono text-accent">#{contractInfo.timeout}</span>
+              </div>
+              <div className="pt-2 border-t border-accent/20">
+                <a
+                  href={`https://chipnet.bitcoinexplorer.org/address/${contractInfo.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-accent hover:underline flex items-center gap-1"
+                >
+                  View on Explorer
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         {action.links.actions.length > 0 && (
@@ -213,7 +265,7 @@ export default function ActionCard({ action }: ActionCardProps) {
             >
               CashScript
             </a>{' '}
-            • Bitcoin Cash URI Protocol
+            • Bitcoin Cash URI Protocol{contractInfo && ' • Covenant Smart Contract'}
           </p>
         </div>
       </div>

@@ -21,10 +21,18 @@ export interface ActionLinks {
   [key: string]: any;
 }
 
+export interface ContractInfo {
+  address: string;
+  timeout: number;
+  status: 'active' | 'expired';
+  txid: string;
+}
+
 export interface BlinchActionMetadata {
   protocol: string;
   identifier: string;
   hex_prefix: string;
+  contract_info?: ContractInfo;
 }
 
 export interface BlinchAction {

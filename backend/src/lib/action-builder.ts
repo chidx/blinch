@@ -1,5 +1,6 @@
 /**
  * Action builder utilities for generating BCH-Action JSON Schema
+ * Supports both direct payment and contract-based actions
  */
 
 import {
@@ -7,7 +8,12 @@ import {
   ActionLink,
   ActionParameter,
   BlinchActionMetadata,
-} from '../types/action';
+} from '../types/action.js';
+import {
+  buildContractUri,
+  getContractMetadata,
+  canExecuteContract,
+} from '../services/contractService.js';
 
 // Protocol prefix: "FLOW\x01" in hex (0x464c4f5701)
 const PROTOCOL_PREFIX = '464c4f5701';
@@ -71,7 +77,7 @@ export function createActionLink(params: {
 }
 
 /**
- * Build complete Blinch action schema
+ * Build complete Blinch action schema (direct payment)
  */
 export function buildBlinchAction(params: {
   id: string;
@@ -111,6 +117,80 @@ export function buildBlinchAction(params: {
       actions: [actionLink],
     },
     metadata: DEFAULT_METADATA,
+  };
+}
+
+/**
+ * Build Blinch action with contract integration
+ * This creates a URI pointing to the contract address instead of recipient
+ */
+export function buildContractBlinchAction(params: {
+  id: string;
+  title: string;
+  description: string;
+  recipientAddress: string;
+  amount?: string;
+  iconUrl?: string;
+  actionType?: string;
+  parameters?: ActionParameter[];
+  network?: string;
+}): BlinchActionSchema {
+  const {
+    id,
+    title,
+    description,
+    recipientAddress,
+    amount,
+    iconUrl = 'https://blinch.network/assets/icon.png',
+    actionType = 'execute',
+    parameters,
+    network = 'chipnet',
+  } = params;
+
+  // Check if contract is still valid
+  const canExecute = canExecuteContract(network);
+  if (!canExecute) {
+    throw new Error('Contract has expired. Please deploy a new contract instance.');
+  }
+
+  // Build URI pointing to contract address
+  const contractUri = buildContractUri({
+    recipientAddress,
+    amount,
+    actionType,
+    network,
+  });
+
+  const actionLink: ActionLink = {
+    label: 'Execute',
+    href: contractUri,
+    parameters,
+  };
+
+  // Get contract metadata for the response
+  const contractMeta = getContractMetadata(network);
+
+  // Enhanced metadata with contract information
+  const enhancedMetadata: BlinchActionMetadata = {
+    ...DEFAULT_METADATA,
+    contract_info: {
+      address: contractMeta.contractAddress,
+      timeout: contractMeta.timeoutBlock,
+      status: contractMeta.status,
+      txid: contractMeta.contractTxId,
+    },
+  };
+
+  return {
+    version: '1.1.0',
+    type: 'action',
+    icon: iconUrl,
+    title,
+    description,
+    links: {
+      actions: [actionLink],
+    },
+    metadata: enhancedMetadata,
   };
 }
 
