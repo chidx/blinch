@@ -22,14 +22,17 @@ const router = Router();
 // Initialize store on module load
 let actionStore = await initializeActionStore();
 
-// Initialize with example action if store is empty
+// Initialize with demo actions if store is empty
 if (actionStore.getAll().length === 0) {
-  const exampleSchema = buildBlinchAction({
-    id: 'example',
-    title: 'Example Blinch Action',
-    description: 'An example interactive Bitcoin Cash action',
-    recipientAddress: 'bitcoincash:qzp2wq8l9r5h6l7x8z9c0b1n2m3k4j5k6l7z8c9b0n1',
-    amount: '0.01',
+  console.log('🎬 Initializing demo actions...');
+
+  // Demo 1: Simple Tip - Basic protocol demonstration
+  const simpleTipSchema = buildBlinchAction({
+    id: 'simple-tip',
+    title: '☕ Quick Tip',
+    description: 'Send a small tip with the Blinch protocol. This action demonstrates the basic OP_RETURN protocol enforcement - every transaction includes the FLOW\\x01 identifier on-chain.',
+    recipientAddress: 'bchtest:qpntz7207trgrekq50jly9yqwteurej3nc0qr4arxr',
+    amount: '0.001',
     actionType: 'tip',
     parameters: [
       {
@@ -41,7 +44,73 @@ if (actionStore.getAll().length === 0) {
     ],
   });
 
-  await actionStore.create(exampleSchema);
+  await actionStore.create(simpleTipSchema);
+  console.log('✓ Created: simple-tip');
+
+  // Demo 2: Bounty Blinch - Conditional payment via smart contract
+  const bountyBlinchSchema = buildContractBlinchAction({
+    id: 'bounty-blinch',
+    title: '🎯 Bounty Blinch',
+    description: 'Post a bounty that can only be claimed by including proof in the OP_RETURN. The smart contract enforces protocol compliance - funds are locked until the correct action is performed.',
+    recipientAddress: 'bchtest:qpntz7207trgrekq50jly9yqwteurej3nc0qr4arxr',
+    amount: '0.005',
+    actionType: 'bounty_claim',
+    parameters: [
+      {
+        name: 'bounty_id',
+        label: 'Bounty ID',
+        type: 'text',
+        required: true,
+        default: 'demo-bounty-001',
+      },
+      {
+        name: 'proof',
+        label: 'Proof of Work',
+        type: 'text',
+        required: true,
+      },
+    ],
+    network: 'chipnet',
+  });
+
+  await actionStore.create(bountyBlinchSchema);
+  console.log('✓ Created: bounty-blinch');
+
+  // Demo 3: Dev Reward - Developer appreciation with contract protection
+  const devRewardSchema = buildContractBlinchAction({
+    id: 'dev-reward',
+    title: '💎 Dev Reward',
+    description: 'Reward developers with covenant-protected payments. Funds are secured by a smart contract that enforces the Blinch protocol, ensuring every transaction is verifiable on-chain.',
+    recipientAddress: 'bchtest:qpntz7207trgrekq50jly9yqwteurej3nc0qr4arxr',
+    amount: '0.01',
+    actionType: 'reward',
+    parameters: [
+      {
+        name: 'dev_username',
+        label: 'Developer Username',
+        type: 'text',
+        required: true,
+      },
+      {
+        name: 'contribution',
+        label: 'Contribution Type',
+        type: 'text',
+        required: true,
+        default: 'bug-fix',
+      },
+      {
+        name: 'message',
+        label: 'Thank You Message',
+        type: 'text',
+        required: false,
+      },
+    ],
+    network: 'chipnet',
+  });
+
+  await actionStore.create(devRewardSchema);
+  console.log('✓ Created: dev-reward');
+  console.log(`🎉 Demo actions ready! Visit /action/{id} to test`);
 }
 
 /**

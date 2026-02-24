@@ -28,10 +28,10 @@ export default function HomePage() {
               Create Your Blinch
             </Link>
             <Link
-              href="/action/example"
-              className="px-6 py-3 rounded-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity font-medium"
+              href="/demo"
+              className="px-6 py-3 rounded-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity font-medium shadow-lg shadow-primary/20"
             >
-              Try Example
+              🎬 Try Demo
             </Link>
             <Link
               href="/docs"
