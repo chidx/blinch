@@ -8,6 +8,7 @@
 'use client';
 
 import { useState } from 'react';
+import TransactionVisualizer from './TransactionVisualizer';
 
 interface TransactionVerificationProps {
   protocolPrefix: string;
@@ -21,6 +22,7 @@ export default function TransactionVerification({
   actionTitle
 }: TransactionVerificationProps) {
   const [txIdInput, setTxIdInput] = useState('');
+  const [verifyingTxId, setVerifyingTxId] = useState('');
   const [copied, setCopied] = useState(false);
 
   const explorerUrl = network === 'chipnet'
@@ -35,8 +37,13 @@ export default function TransactionVerification({
 
   const handleVerifyTxId = () => {
     if (txIdInput.trim()) {
-      window.open(`${explorerUrl}/tx/${txIdInput.trim()}`, '_blank');
+      setVerifyingTxId(txIdInput.trim());
     }
+  };
+
+  const handleResetVerification = () => {
+    setVerifyingTxId('');
+    setTxIdInput('');
   };
 
   const verificationSteps = [
@@ -151,6 +158,26 @@ export default function TransactionVerification({
           </a>
         </div>
       </div>
+
+      {/* Transaction Visualizer */}
+      {verifyingTxId && (
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-medium">Transaction Analysis</h4>
+            <button
+              onClick={handleResetVerification}
+              className="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Verify Another
+            </button>
+          </div>
+          <TransactionVisualizer
+            txId={verifyingTxId}
+            protocolPrefix={protocolPrefix}
+            network={network}
+          />
+        </div>
+      )}
 
       {/* Network Badge */}
       <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
