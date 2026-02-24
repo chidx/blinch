@@ -7,11 +7,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { getAllActions } from '@/lib/storage';
 
 export function Navigation() {
   const pathname = usePathname();
-  const userActionCount = getAllActions().length;
+  const [userActionCount, setUserActionCount] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    setUserActionCount(getAllActions().length);
+  }, []);
 
   const navLinks = [
     { href: '/', label: 'Home', match: /^\/$/ },
@@ -19,8 +26,8 @@ export function Navigation() {
     { href: '/docs', label: 'Docs', match: /^\/docs/ },
   ];
 
-  // Only show dashboard if user has actions
-  if (userActionCount > 0) {
+  // Only show dashboard if user has actions (after client-side mount)
+  if (isMounted && userActionCount > 0) {
     navLinks.splice(2, 0, {
       href: '/dashboard',
       label: 'Dashboard',
