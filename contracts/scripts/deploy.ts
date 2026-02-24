@@ -39,7 +39,7 @@ function getNetwork(network: string): Network {
 const DEFAULT_CONFIG: DeploymentConfig = {
   network: 'chipnet',
   recipientPkh: '', // Set this or pass as argument
-  timeoutBlocks: 144,
+  timeoutBlocks: parseInt(process.env.TIMEOUT_BLOCKS || '144', 10),
 };
 
 class BlinchDeployer {

@@ -18,19 +18,19 @@ export interface ContractConfig {
 
 /**
  * Current active contract deployment on Chipnet
- * Deployed: 2026-02-23
- * Expires: Block 294265 (~24 hours from deployment)
+ * Deployed: 2026-02-24
+ * Expires: Block 296276 (~33 hours from deployment, long-lived for hackathon)
  */
 export const CHIPNET_CONTRACT: ContractConfig = {
   network: 'chipnet',
-  contractAddress: 'bchtest:p0m9t6s85glh7w303pm8qj3u80ej0744eazssfscxlkmzl80ewdlqednnnvya',
-  transactionId: 'b547212d5612ce1e85d52b988d11a5a77fa2415f0e73b19d22ddb17ba4d64ac0',
-  timeoutBlock: 294265,
+  contractAddress: 'bchtest:pvl6kkac6wttmdlhzmyadq5kcvaplzsjwahl3zjyt26qgkwxdy0yga98dxe32',
+  transactionId: '537325ba72e9d646269242afb8f486dce6eb8672b679e5605e95051aeed0fb7c',
+  timeoutBlock: 296276,
   creatorPubKey: '02be8602a91db05c4fc85af1f299ecbbd9d7c1fd163f7140aa7bf93a5280e7fb6a',
   creatorAddress: 'bchtest:qpntz7207trgrekq50jly9yqwteurej3nc0qr4arxr',
   recipientPubKey: '02be8602a91db05c4fc85af1f299ecbbd9d7c1fd163f7140aa7bf93a5280e7fb6a',
-  deployedAt: '2026-02-23T01:58:36.002Z',
-  deploymentBlock: 294121,
+  deployedAt: '2026-02-24T03:42:00.882Z',
+  deploymentBlock: 294276,
 };
 
 /**

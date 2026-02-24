@@ -12,11 +12,12 @@ import {
 import BlinchArtifact from '../contracts/Blinch.json';
 
 // Contract deployment configuration (from backend)
+// Long-lived deployment for hackathon judging
 export const CONTRACT_CONFIG = {
   network: 'chipnet',
-  contractAddress: 'bchtest:p0m9t6s85glh7w303pm8qj3u80ej0744eazssfscxlkmzl80ewdlqednnnvya',
-  transactionId: 'b547212d5612ce1e85d52b988d11a5a77fa2415f0e73b19d22ddb17ba4d64ac0',
-  timeoutBlock: 294265,
+  contractAddress: 'bchtest:pvl6kkac6wttmdlhzmyadq5kcvaplzsjwahl3zjyt26qgkwxdy0yga98dxe32',
+  transactionId: '537325ba72e9d646269242afb8f486dce6eb8672b679e5605e95051aeed0fb7c',
+  timeoutBlock: 296276,
   creatorPubKey: '02be8602a91db05c4fc85af1f299ecbbd9d7c1fd163f7140aa7bf93a5280e7fb6a',
   recipientPubKey: '02be8602a91db05c4fc85af1f299ecbbd9d7c1fd163f7140aa7bf93a5280e7fb6a',
 };

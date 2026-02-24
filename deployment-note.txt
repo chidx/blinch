@@ -1,34 +1,38 @@
-Deployment Summary (FRESH - Feb 23, 2026)
+Deployment Summary (HACKATHON EDITION - Feb 24, 2026)
 
-  Successfully deployed a NEW Blinch contract to Chipnet!
+  Successfully deployed a LONG-LIVED Blinch contract to Chipnet!
+  This deployment has 2000 blocks timeout (~33 hours) for hackathon judging.
 
   Contract Details
 
-  - Contract Address: bchtest:p0m9t6s85glh7w303pm8qj3u80ej0744eazssfscxlkmzl80ewdlqednnnvya
-  - Transaction ID: b547212d5612ce1e85d52b988d11a5a77fa2415f0e73b19d22ddb17ba4d64ac0
+  - Contract Address: bchtest:pvl6kkac6wttmdlhzmyadq5kcvaplzsjwahl3zjyt26qgkwxdy0yga98dxe32
+  - Transaction ID: 537325ba72e9d646269242afb8f486dce6eb8672b679e5605e95051aeed0fb7c
   - Creator Address: bchtest:qpntz7207trgrekq50jly9yqwteurej3nc0qr4arxr
   - Creator/Recipient Public Key: 02be8602a91db05c4fc85af1f299ecbbd9d7c1fd163f7140aa7bf93a5280e7fb6a
-  - Timeout Block: 294265 (144 blocks from deployment at block 294121)
-  - Current Block: 294121 (as of deployment)
+  - Timeout Block: 296276 (2000 blocks from deployment at block 294276)
+  - Current Block: 294276 (as of deployment)
+  - Remaining Blocks: 2000 blocks (~33 hours)
 
-  IMPORTANT: This contract expires at block 294265 (~24 hours from deployment)
+  IMPORTANT: This contract expires at block 296276
+  This is a long-lived deployment specifically for hackathon judging.
 
   Explorer
 
   View the transaction:
-  https://chipnet.bitcoinexplorer.org/tx/b547212d5612ce1e85d52b988d11a5a77fa2415f0e73b19d22ddb17ba4d64ac0
+  https://chipnet.bitcoinexplorer.org/tx/537325ba72e9d646269242afb8f486dce6eb8672b679e5605e95051aeed0fb7c
 
   View the contract:
-  https://chipnet.bitcoinexplorer.org/address/bchtest:p0m9t6s85glh7w303pm8qj3u80ej0744eazssfscxlkmzl80ewdlqednnnvya
+  https://chipnet.bitcoinexplorer.org/address/bchtest:pvl6kkac6wttmdlhzmyadq5kcvaplzsjwahl3zjyt26qgkwxdy0yga98dxe32
 
   Integration Notes
 
   - Contract is funded with 10,000 satoshis for demo purposes
-  - Contract has 144 block timeout for creator cancellation
+  - Contract has 2000 block timeout (~33 hours) for hackathon judging
   - Creator and recipient are the same key for this demo deployment
-  - Ready for backend/frontend integration
+  - Backend and frontend configs have been updated with this deployment
 
-  Previous Deployment (EXPIRED)
+  Deployment History
 
-  - Old Contract: bchtest:pwzxslgat0u4879tfqvmuv5eh3kky5d4ekwc7pzlc6zmqa46tm3myw7z9u0du
-  - Expired at block 293591 (do NOT use)
+  1. [EXPIRED] Contract deployed Feb 17 - expired at block 293591
+  2. [EXPIRED] Contract deployed Feb 23 - expired at block 294265 (24h timeout)
+  3. [ACTIVE] This deployment - expires at block 296276 (33h timeout) ← USE THIS ONE
