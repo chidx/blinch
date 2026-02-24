@@ -17,24 +17,72 @@ Complete guide for deploying the Blinch protocol to production.
 
 ## Prerequisites
 
-### Required Software
+### For Backend VPS Deployment
 
-- **Node.js**: v22.22.0 or higher
-- **npm**: v8.19.4 or higher
-- **Git**: v2.40.0 or higher
-- **TypeScript**: v5.7.2
+**What is a VPS?**
+A VPS (Virtual Private Server) is a remote computer that runs 24/7 in the cloud. You'll rent one from a hosting provider and access it remotely to deploy your backend.
 
-### Required Accounts
+**Choosing a VPS Provider:**
 
-- **Bitcoin Cash Testnet Wallet**: For Chipnet testing
-- **Domain Name**: For frontend deployment (optional but recommended)
-- **Hosting Provider**: VPS or cloud platform (AWS, GCP, DigitalOcean, etc.)
+Popular options (all have free trials or low-cost plans):
+- **DigitalOcean** - $6/month, very beginner-friendly
+- **Linode** - $5/month, good performance
+- **AWS EC2** - Free tier available (12 months), more complex
+- **Vultr** - $6/month, simple setup
+- **Hetzner** - ~€4/month, great value in Europe
+
+**Recommended VPS Specifications:**
+- **CPU**: 1 vCPU minimum (2 recommended for production)
+- **RAM**: 1GB minimum (2GB recommended)
+- **Storage**: 20GB SSD minimum
+- **Operating System**: Ubuntu 22.04 LTS or 24.04 LTS (recommended)
+- **Bandwidth**: 1TB/month minimum
+
+**Required Before Starting:**
+
+| Item | Why You Need It | How to Get It |
+|------|----------------|---------------|
+| **VPS Server** | Hosts your backend 24/7 | Sign up at DigitalOcean/Linode/AWS and create a "Droplet" or "Instance" |
+| **Domain Name** | Makes your API accessible (e.g., `api.blinch.network`) | Buy from Namecheap, GoDaddy, or Cloudflare ($10-15/year) |
+| **SSH Access** | Connect to your VPS remotely | Use Terminal (Mac/Linux) or PuTTY (Windows) |
+| **Root Password** | Admin access to your server | Created when you set up your VPS |
+
+**Network Requirements:**
+- Your VPS must allow **outbound internet** (for blockchain queries)
+- Your VPS must allow **inbound traffic** on ports 80 (HTTP) and 443 (HTTPS)
+- Your domain's DNS A record must point to your VPS IP address
+
+### For Local Development
+
+If you want to test locally before deploying:
+
+**Required Software:**
+- **Node.js**: v25.6.1 or higher ([download](https://nodejs.org/))
+- **npm**: v10.9.0 or higher (comes with Node.js)
+- **Git**: v2.40.0 or higher ([download](https://git-scm.com/))
+- **TypeScript**: v5.7.2 (installed via npm)
+
+**Check your versions:**
+```bash
+node --version
+npm --version
+git --version
+```
+
+### Required Accounts & Services
+
+| Service | Purpose | Required For |
+|---------|---------|--------------|
+| **GitHub Account** | Store your code | All deployments |
+| **BCH Wallet** | Test transactions | Chipnet testing |
+| **Domain Name** | Professional URL | Production deployment |
+| **CashScript Wallet** | Deploy smart contracts | Contract deployment |
 
 ### Network Access
 
-- **Chipnet Electrum Server**: For testnet deployments
+- **Chipnet Electrum Server**: For testnet deployments (`chipnet.imaginary.cash:50004`)
 - **Mainnet Electrum Server**: For production deployments
-- **Outbound Internet Access**: For npm installs and blockchain queries
+- **Outbound Internet Access**: Required for npm installs and blockchain queries
 
 ---
 
@@ -59,17 +107,7 @@ npm run install:all
 
 ### 3. Configure Environment Variables
 
-Create environment files for each workspace:
-
-**Root** `.env`:
-```bash
-# Network Configuration
-NETWORK=chipnet  # chipnet | testnet | mainnet
-
-# Backend API
-BACKEND_URL=http://localhost:3001
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
+**IMPORTANT:** The project has three separate environments to configure:
 
 **Backend** `backend/.env`:
 ```bash
@@ -95,7 +133,24 @@ API_ACCESS_AMOUNT=1000
 PREMIUM_AMOUNT=5000
 ```
 
-**Frontend** `frontend/.env.local`:
+**Frontend** Environment Variables:
+
+For local development, use **Root** `.env.local`:
+```bash
+# This file is used by Next.js during development
+# Copy from .env.local.example and fill in your values
+
+# Backend API URL (for server-side proxy)
+BACKEND_URL=http://localhost:3001
+
+# Public API URL (for client-side requests)
+NEXT_PUBLIC_API_URL=http://localhost:3001
+
+# Network (chipnet, testnet, mainnet)
+NEXT_PUBLIC_NETWORK=chipnet
+```
+
+For production deployment on Vercel/VPS, use **Frontend** `frontend/.env.local`:
 ```bash
 # Backend API URL
 BACKEND_URL=http://localhost:3001
@@ -107,6 +162,8 @@ NEXT_PUBLIC_NETWORK=chipnet
 # Analytics (optional)
 NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 ```
+
+**Note:** The root `.env` and `.env.local.example` files are specifically for Next.js frontend development. Variables prefixed with `NEXT_PUBLIC_*` are exposed to the browser, while `BACKEND_URL` is used server-side.
 
 ---
 
@@ -218,58 +275,498 @@ After deployment, artifacts are saved to `contracts/deployments/`:
 
 ## Backend Deployment
 
+### Understanding the Architecture
+
+Before deploying, it helps to understand what each component does:
+
+```
+┌─────────────────┐      ┌──────────────┐      ┌─────────────────┐
+│  User's Browser │ ───> │  Nginx (Port │ ───> │  Your Backend   │
+│  (Port 443)     │      │   80/443)    │      │  (Port 3001)    │
+└─────────────────┘      └──────────────┘      └─────────────────┘
+                                │                        │
+                                │                        ▼
+                                │                 ┌──────────────────┐
+                                │                 │  BCH Blockchain  │
+                                │                 │  (Electrum)      │
+                                │                 └──────────────────┘
+                                │
+                                ▼
+                        ┌──────────────────┐
+                        │  SSL Certificate │
+                        │  (HTTPS)         │
+                        └──────────────────┘
+```
+
+**Component Roles:**
+- **Nginx**: The "doorman" - receives web requests and forwards them to your backend
+- **PM2**: The "manager" - keeps your backend running and restarts it if it crashes
+- **Node.js**: The "engine" - runs your JavaScript/TypeScript backend code
+- **SSL Certificate**: The "security guard" - encrypts traffic so hackers can't read it
+- **Firewall (ufw)**: The "bouncer" - blocks unwanted traffic
+
+**Why do we need all this?**
+- Without Nginx, you'd need to run your backend as `root` (security risk)
+- Without PM2, your backend would stop if it crashes or when you close SSH
+- Without SSL, your traffic would be unencrypted (security risk)
+- Without a firewall, your server would be exposed to attacks
+
 ### Option 1: Traditional VPS
 
-#### 1. Build Backend
+This guide walks through deploying the backend on a VPS (Virtual Private Server) like DigitalOcean, Linode, AWS EC2, or any similar provider.
+
+**Estimated Time:** 30-45 minutes for first-time setup
+
+#### Phase 1: Initial Server Setup
+
+**What you need before starting:**
+- A VPS with Ubuntu 20.04+ or Debian 11+ (recommended: 1GB RAM minimum)
+- Root access or a user with sudo privileges
+- Your domain name pointed to the VPS IP address (e.g., `api.yourdomain.com`)
+- SSH access to your server
+
+##### Step 1.1: Connect to Your VPS
 
 ```bash
-cd backend
+# Replace with your actual VPS IP address and username
+ssh root@your.vps.ip.address
+
+# OR if you have a non-root user with sudo
+ssh username@your.vps.ip.address
+```
+
+**What this does:** Opens a secure shell connection to your remote server.
+
+##### Step 1.2: Update System Packages
+
+```bash
+# Update package lists and upgrade installed packages
+sudo apt update && sudo apt upgrade -y
+```
+
+**What this does:** Ensures your server has the latest security updates and package information.
+
+##### Step 1.3: Install Node.js 25.x
+
+```bash
+# Install Node.js 25.x using NodeSource repository
+curl -fsSL https://deb.nodesource.com/setup_25.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Verify installation
+node --version  # Should show v25.x.x
+npm --version   # Should show v10.x.x or higher
+```
+
+**What this does:**
+- Downloads and installs Node.js version 25.x
+- Node.js is required to run the backend server
+- npm (Node Package Manager) comes bundled with Node.js
+
+##### Step 1.4: Install Git
+
+```bash
+sudo apt install -y git
+
+# Verify installation
+git --version
+```
+
+**What this does:** Git is needed to clone your repository from GitHub.
+
+##### Step 1.5: Install PM2 (Process Manager)
+
+```bash
+sudo npm install -g pm2
+
+# Verify installation
+pm2 --version
+```
+
+**What this does:**
+- PM2 keeps your server running in the background
+- Automatically restarts the server if it crashes
+- Manages server logs and monitoring
+
+##### Step 1.6: Install Nginx (Web Server)
+
+```bash
+sudo apt install -y nginx
+
+# Enable Nginx to start on boot
+sudo systemctl enable nginx
+
+# Start Nginx if not already running
+sudo systemctl start nginx
+
+# Verify it's running
+sudo systemctl status nginx
+```
+
+**What this does:**
+- Nginx acts as a reverse proxy, directing web traffic to your backend
+- Handles SSL/HTTPS encryption
+- Provides security and load balancing
+
+---
+
+#### Phase 2: Deploy Your Code
+
+##### Step 2.1: Clone Your Repository
+
+```bash
+# Navigate to web directory
+cd /var/www
+
+# Clone your repository (replace with your actual repo URL)
+sudo git clone https://github.com/your-username/blinch.git
+
+# Set ownership to your user (replace 'username' with your actual username)
+sudo chown -R username:username /var/www/blinch
+
+# Navigate to backend directory
+cd /var/www/blinch/backend
+```
+
+**What this does:**
+- Downloads your project code from GitHub to the server
+- Sets proper file permissions so you can modify files
+
+##### Step 2.2: Install Dependencies
+
+```bash
+# Install all required Node.js packages
+npm install --production
+```
+
+**What this does:**
+- Downloads all libraries listed in `package.json`
+- `--production` flag skips development dependencies (reduces install time and size)
+
+##### Step 2.3: Build the Backend
+
+```bash
+# Compile TypeScript to JavaScript
 npm run build
 ```
 
-#### 2. Start Server
+**What this does:**
+- Converts TypeScript code to executable JavaScript
+- Creates the `dist/` folder with production-ready files
+
+---
+
+#### Phase 3: Configure Environment
+
+##### Step 3.1: Create Environment File
 
 ```bash
-# Production mode
-NODE_ENV=production npm start
+# Create .env file from template (if exists)
+cp .env.example .env
 
-# Or using PM2 (recommended)
-pm2 start dist/server.js --name blinch-backend
+# OR create a new .env file
+nano .env
 ```
 
-#### 3. Configure Nginx Reverse Proxy
+**What this does:** Creates configuration file for your environment variables.
+
+##### Step 3.2: Edit Environment Variables
+
+Paste the following into `.env` (replace values with your actual data):
+
+```bash
+# Server Configuration
+PORT=3001
+NODE_ENV=production
+
+# Network
+NETWORK=chipnet  # chipnet | testnet | mainnet
+
+# Electrum Server (for blockchain queries)
+ELECTRUM_SERVER=chipnet.imaginary.cash
+ELECTRUM_PORT=50004
+
+# Contract Keys (IMPORTANT: Keep these secure!)
+# Generate these using a secure wallet
+CREATOR_PUBLIC_KEY=02abc...  # Your public key
+CREATOR_PRIVATE_KEY=your_private_key_here  # Your private key (NEVER commit this!)
+
+# Recipient
+RECIPIENT_PUBLIC_KEY=03xyz...  # Recipient's public key
+
+# Payment Configuration (for x402 payment feature)
+PAYMENT_RECIPIENT=bitcoincash:qzp2wq8l9r5h6l7x8z9c0b1n2m3k4j5k6l7z8c9b0n1
+API_ACCESS_AMOUNT=1000
+PREMIUM_AMOUNT=5000
+
+# CORS (which domains can access your API)
+CORS_ORIGIN=https://yourdomain.com
+```
+
+**Save and exit:** Press `Ctrl+O`, then `Enter`, then `Ctrl+X`.
+
+**What this does:** Configures how your backend behaves in production.
+
+---
+
+#### Phase 4: Start the Backend Server
+
+##### Step 4.1: Start with PM2
+
+```bash
+# Start the backend server with PM2
+pm2 start dist/server.js --name blinch-backend
+
+# Check if it's running
+pm2 status
+
+# View real-time logs
+pm2 logs blinch-backend
+
+# Set PM2 to start on system reboot
+pm2 startup
+# Run the command output by the above command
+pm2 save
+```
+
+**What this does:**
+- Starts your backend server in the background
+- `pm2 startup` ensures the server restarts automatically if the VPS reboots
+- `pm2 save` saves the current process list
+
+##### Step 4.2: Verify Backend is Running
+
+```bash
+# Test the backend locally
+curl http://localhost:3001/api/health
+
+# You should see a JSON response like:
+# {"status":"ok","service":"blinch-backend",...}
+```
+
+**What this does:** Confirms your backend is responding to requests.
+
+---
+
+#### Phase 5: Configure Nginx Reverse Proxy
+
+##### Step 5.1: Create Nginx Configuration
+
+```bash
+# Create a new site configuration
+sudo nano /etc/nginx/sites-available/blinch-api
+```
+
+Paste the following configuration (replace `api.blinch.network` with your actual domain):
 
 ```nginx
 # /etc/nginx/sites-available/blinch-api
 server {
     listen 80;
-    server_name api.blinch.network;
+    server_name api.blinch.network;  # Replace with your domain
+
+    # Redirect HTTP to HTTPS (uncomment after SSL is configured)
+    # return 301 https://$server_name$request_uri;
 
     location / {
         proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
+
+        # WebSocket support (if needed)
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
+
+        # Standard proxy headers
         proxy_set_header Host $host;
         proxy_cache_bypass $http_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
     }
 }
 ```
 
-Enable site:
+**Save and exit:** Press `Ctrl+O`, then `Enter`, then `Ctrl+X`.
+
+**What this does:**
+- Tells Nginx how to handle incoming requests
+- Forwards requests to your backend running on port 3001
+- Sets proper headers for WebSocket and HTTPS support
+
+##### Step 5.2: Enable the Site
+
 ```bash
+# Create symbolic link to enable the site
 sudo ln -s /etc/nginx/sites-available/blinch-api /etc/nginx/sites-enabled/
+
+# Test Nginx configuration for errors
 sudo nginx -t
+
+# If test is successful, reload Nginx
 sudo systemctl reload nginx
 ```
 
-#### 4. Configure SSL with Let's Encrypt
+**What this does:**
+- Activates your Nginx configuration
+- Checks for syntax errors before applying
+- Applies the new configuration without downtime
+
+##### Step 5.3: Update Firewall (if enabled)
 
 ```bash
+# Allow HTTP and HTTPS through firewall
+sudo ufw allow 'Nginx Full'
+
+# Allow SSH (so you don't lock yourself out)
+sudo ufw allow OpenSSH
+
+# Enable firewall
+sudo ufw enable
+
+# Check firewall status
+sudo ufw status
+```
+
+**What this does:**
+- Opens necessary ports for web traffic (80, 443)
+- Ensures you can still connect via SSH
+
+---
+
+#### Phase 6: Configure SSL/HTTPS
+
+##### Step 6.1: Install Certbot
+
+```bash
+# Install Certbot for Let's Encrypt SSL certificates
+sudo apt install -y certbot python3-certbot-nginx
+```
+
+**What this does:** Certbot is a tool that automatically configures free SSL certificates.
+
+##### Step 6.2: Obtain SSL Certificate
+
+```bash
+# Obtain and configure SSL certificate
 sudo certbot --nginx -d api.blinch.network
+
+# Follow the prompts:
+# 1. Enter your email address
+# 2. Agree to Terms of Service
+# 3. Choose whether to redirect HTTP to HTTPS (recommended: Yes)
+```
+
+**What this does:**
+- Generates a free SSL certificate from Let's Encrypt
+- Automatically configures Nginx to use HTTPS
+- Sets up auto-renewal of certificates
+
+##### Step 6.3: Verify SSL is Working
+
+```bash
+# Test HTTPS access
+curl https://api.blinch.network/api/health
+
+# Or visit in your browser:
+# https://api.blinch.network/api/health
+```
+
+**What this does:** Confirms that HTTPS is working correctly.
+
+---
+
+#### Phase 7: Verify Deployment
+
+##### Step 7.1: Check All Services
+
+```bash
+# Check PM2 processes
+pm2 status
+
+# Check Nginx status
+sudo systemctl status nginx
+
+# View recent backend logs
+pm2 logs blinch-backend --lines 50
+```
+
+**What this does:** Confirms all services are running properly.
+
+##### Step 7.2: Test API Endpoint
+
+```bash
+# Test health endpoint from your local machine
+curl https://api.blinch.network/api/health
+
+# Expected response:
+# {
+#   "status": "ok",
+#   "service": "blinch-backend",
+#   "version": "1.0.0",
+#   "timestamp": "2026-02-24T12:00:00.000Z"
+# }
+```
+
+**What this does:** Verifies your API is accessible from the internet.
+
+---
+
+### Common PM2 Commands
+
+```bash
+# View all processes
+pm2 list
+
+# View logs
+pm2 logs blinch-backend
+
+# View real-time logs
+pm2 logs blinch-backend --lines 100
+
+# Restart the server
+pm2 restart blinch-backend
+
+# Stop the server
+pm2 stop blinch-backend
+
+# Delete from PM2 list
+pm2 delete blinch-backend
+
+# Monitor CPU and memory usage
+pm2 monit
+```
+
+### Updating Your Backend
+
+When you need to deploy updates:
+
+```bash
+# SSH into your server
+ssh username@your.vps.ip.address
+
+# Navigate to project directory
+cd /var/www/blinch
+
+# Pull latest code
+git pull origin main
+
+# Install new dependencies (if package.json changed)
+cd backend
+npm install --production
+
+# Rebuild
+npm run build
+
+# Restart PM2 process
+pm2 restart blinch-backend
+
+# Check logs for errors
+pm2 logs blinch-backend --lines 50
 ```
 
 ### Option 2: Cloud Platforms
