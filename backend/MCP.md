@@ -26,11 +26,113 @@ npm run mcp
 
 The server will run on stdio (standard input/output) for communication with MCP clients.
 
-### Production Mode
+### Production Mode (Local)
 
 ```bash
-npm run build
-npm run mcp
+npm run build:mcp
+npm run start:mcp
+```
+
+## VPS Deployment with PM2
+
+### Prerequisites
+
+1. Copy your backend code to the VPS
+2. Install dependencies: `npm install`
+3. Build the MCP server: `npm run build:mcp`
+
+### PM2 Configuration
+
+Create an `ecosystem.config.js` file in your backend directory:
+
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'blinch-backend',
+      script: './dist/server.js',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3001
+      }
+    },
+    {
+      name: 'blinch-mcp',
+      script: './dist/mcp/index.js',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '512M',
+      interpreter: 'node',
+      env: {
+        NODE_ENV: 'production',
+        BACKEND_URL: 'http://localhost:3001'
+      }
+    }
+  ]
+};
+```
+
+### Deploy with PM2
+
+```bash
+# Install PM2 globally (if not installed)
+npm install -g pm2
+
+# Start both services
+pm2 start ecosystem.config.js
+
+# Save PM2 process list
+pm2 save
+
+# Setup PM2 to start on system reboot
+pm2 startup
+# Follow the instructions printed by the command above
+
+# Useful PM2 commands
+pm2 list              # List all processes
+pm2 logs              # View logs
+pm2 logs blinch-mcp   # View MCP logs specifically
+pm2 restart blinch-mcp # Restart MCP server
+pm2 stop blinch-mcp    # Stop MCP server
+pm2 delete blinch-mcp  # Remove MCP server from PM2
+pm2 monit             # Monitor CPU and memory usage
+```
+
+### Quick Start (Single Commands)
+
+If you don't want to use ecosystem.config.js:
+
+```bash
+# Build the MCP server
+npm run build:mcp
+
+# Start with PM2
+pm2 start ./dist/mcp/index.js --name blinch-mcp
+
+# Save and setup startup
+pm2 save
+pm2 startup
+```
+
+### Troubleshooting
+
+```bash
+# Check if MCP is running
+pm2 status
+
+# View real-time logs
+pm2 logs --lines 100
+
+# Restart if crashed
+pm2 restart blinch-mcp
+
+# Check for errors
+pm2 logs blinch-mcp --err
 ```
 
 ## MCP Configuration

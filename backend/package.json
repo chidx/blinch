@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "node --import tsx/esm src/server.ts",
     "build": "tsup src/server.ts --format esm --clean",
+    "build:mcp": "tsup src/mcp/index.ts --format esm --outDir dist/mcp --clean",
     "start": "node dist/server.js",
+    "start:mcp": "node dist/mcp/index.js",
     "test": "jest",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
