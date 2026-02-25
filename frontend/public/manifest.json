@@ -1,0 +1,23 @@
+{
+  "name": "Blinch - Bitcoin Cash Interactive Blinks",
+  "short_name": "Blinch",
+  "description": "Interactive Bitcoin Cash Blinks protocol",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#ff6b35",
+  "icons": [
+    {
+      "src": "/icon-md.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-lg.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
