@@ -411,7 +411,8 @@ export default function DocsPage() {
       {/* Footer */}
       <footer className="border-t border-white/10 mt-16">
         <div className="container mx-auto px-4 py-8 text-center text-gray-500 text-sm">
-          <p>Blinch Protocol - Built for BCH-1 Hackcelerator</p>
+          <p>Blinch Protocol</p>
+          <p className="mt-2">Powered by CashScript • Next.js 16 • Bitcoin Cash</p>
         </div>
       </footer>
     </div>
