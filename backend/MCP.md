@@ -18,19 +18,78 @@ npm install
 
 ## Running the MCP Server
 
-### Development Mode
+### Development Mode (stdio)
 
 ```bash
 npm run mcp
 ```
 
-The server will run on stdio (standard input/output) for communication with MCP clients.
+The server will run on stdio (standard input/output) for communication with MCP clients like Claude Desktop.
+
+### Development Mode (HTTP/SSE)
+
+```bash
+npm run mcp:http
+```
+
+The HTTP server will start on port 3002 (configurable via `MCP_PORT` env var).
+
+**Access points:**
+- SSE endpoint: `http://localhost:3002/sse`
+- Health check: `http://localhost:3002/health`
 
 ### Production Mode (Local)
 
 ```bash
-npm run build:mcp
+# Build both stdio and HTTP versions
+npm run build:mcp:clean
+
+# Run stdio version
 npm run start:mcp
+
+# OR run HTTP version
+npm run start:mcp:http
+```
+
+### Testing the HTTP Server
+
+```bash
+# In one terminal, start the HTTP MCP server
+npm run mcp:http
+
+# In another terminal, test the connection
+node test-mcp-http.js
+```
+
+### MCP Client Configuration
+
+**For HTTP/SSE (recommended for VPS):**
+
+```json
+{
+  "mcpServers": {
+    "blinch": {
+      "url": "http://your-vps-ip:3002/sse",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+**For stdio (local development only):**
+
+```json
+{
+  "mcpServers": {
+    "blinch": {
+      "command": "node",
+      "args": ["/path/to/blinch/backend/dist/mcp/index.js"],
+      "env": {
+        "BACKEND_URL": "http://localhost:3001"
+      }
+    }
+  }
+}
 ```
 
 ## VPS Deployment with PM2
@@ -39,43 +98,21 @@ npm run start:mcp
 
 1. Copy your backend code to the VPS
 2. Install dependencies: `npm install`
-3. Build the MCP server: `npm run build:mcp`
+3. Build all servers: `npm run build:all`
 
 ### PM2 Configuration
 
-Create an `ecosystem.config.js` file in your backend directory:
+Copy `ecosystem.config.example.js` to `ecosystem.config.js` and customize:
 
-```javascript
-module.exports = {
-  apps: [
-    {
-      name: 'blinch-backend',
-      script: './dist/server.js',
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '1G',
-      env: {
-        NODE_ENV: 'production',
-        PORT: 3001
-      }
-    },
-    {
-      name: 'blinch-mcp',
-      script: './dist/mcp/index.js',
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '512M',
-      interpreter: 'node',
-      env: {
-        NODE_ENV: 'production',
-        BACKEND_URL: 'http://localhost:3001'
-      }
-    }
-  ]
-};
+```bash
+cp ecosystem.config.example.js ecosystem.config.js
 ```
+
+The example config includes:
+- **blinch-backend**: Main Express API server (port 3001)
+- **blinch-mcp-http**: HTTP/SSE MCP server (port 3002) - **Use this for VPS**
+
+**Note:** The stdio version (`blinch-mcp-stdio`) is commented out in the example. Only use it for local Claude Desktop development.
 
 ### Deploy with PM2
 
@@ -83,7 +120,7 @@ module.exports = {
 # Install PM2 globally (if not installed)
 npm install -g pm2
 
-# Start both services
+# Start all services (backend + HTTP MCP server)
 pm2 start ecosystem.config.js
 
 # Save PM2 process list
@@ -94,13 +131,13 @@ pm2 startup
 # Follow the instructions printed by the command above
 
 # Useful PM2 commands
-pm2 list              # List all processes
-pm2 logs              # View logs
-pm2 logs blinch-mcp   # View MCP logs specifically
-pm2 restart blinch-mcp # Restart MCP server
-pm2 stop blinch-mcp    # Stop MCP server
-pm2 delete blinch-mcp  # Remove MCP server from PM2
-pm2 monit             # Monitor CPU and memory usage
+pm2 list                   # List all processes
+pm2 logs                   # View logs
+pm2 logs blinch-mcp-http   # View MCP logs specifically
+pm2 restart blinch-mcp-http # Restart MCP server
+pm2 stop blinch-mcp-http    # Stop MCP server
+pm2 delete blinch-mcp-http  # Remove MCP server from PM2
+pm2 monit                  # Monitor CPU and memory usage
 ```
 
 ### Quick Start (Single Commands)
@@ -108,15 +145,40 @@ pm2 monit             # Monitor CPU and memory usage
 If you don't want to use ecosystem.config.js:
 
 ```bash
-# Build the MCP server
-npm run build:mcp
+# Build the MCP servers
+npm run build:mcp:clean
 
-# Start with PM2
-pm2 start ./dist/mcp/index.js --name blinch-mcp
+# Start HTTP MCP server with PM2
+pm2 start ./dist/mcp/http.js --name blinch-mcp-http --env MCP_PORT=3002
 
 # Save and setup startup
 pm2 save
 pm2 startup
+```
+
+### Testing on VPS
+
+```bash
+# Test health endpoint
+curl http://localhost:3002/health
+
+# Should return: {"status":"healthy","service":"blinch-mcp"}
+
+# Test SSE endpoint (should establish connection)
+curl -N http://localhost:3002/sse
+```
+
+### Firewall Configuration
+
+Make sure to open port 3002 for MCP access:
+
+```bash
+# Ubuntu/Debian with ufw
+sudo ufw allow 3002/tcp
+
+# CentOS/RHEL with firewalld
+sudo firewall-cmd --permanent --add-port=3002/tcp
+sudo firewall-cmd --reload
 ```
 
 ### Troubleshooting
@@ -128,11 +190,14 @@ pm2 status
 # View real-time logs
 pm2 logs --lines 100
 
-# Restart if crashed
-pm2 restart blinch-mcp
+# Restart HTTP MCP if crashed
+pm2 restart blinch-mcp-http
 
 # Check for errors
-pm2 logs blinch-mcp --err
+pm2 logs blinch-mcp-http --err
+
+# Test connectivity
+curl http://localhost:3002/health
 ```
 
 ## MCP Configuration

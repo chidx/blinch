@@ -7,13 +7,17 @@
   "scripts": {
     "dev": "node --import tsx/esm src/server.ts",
     "build": "tsup src/server.ts --format esm --clean",
-    "build:mcp": "tsup src/mcp/index.ts --format esm --outDir dist/mcp --clean",
+    "build:mcp": "tsup src/mcp/index.ts src/mcp/http.ts --format esm --outDir dist/mcp",
+    "build:mcp:clean": "tsup src/mcp/index.ts src/mcp/http.ts --format esm --outDir dist/mcp --clean",
+    "build:all": "npm run build && npm run build:mcp:clean",
     "start": "node dist/server.js",
     "start:mcp": "node dist/mcp/index.js",
+    "start:mcp:http": "node dist/mcp/http.js",
+    "mcp": "node --import tsx/esm src/mcp/index.ts",
+    "mcp:http": "node --import tsx/esm src/mcp/http.ts",
     "test": "jest",
     "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
-    "mcp": "node --import tsx/esm src/mcp/index.ts"
+    "lint:fix": "eslint src --ext .ts --fix"
   },
   "keywords": [
     "express",
