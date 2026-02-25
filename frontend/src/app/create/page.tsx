@@ -111,7 +111,12 @@ export default function CreateActionPage() {
   };
 
   const handleBack = () => {
-    setStep((prev) => Math.max(prev - 1, 1) as FormStep);
+    if (step === 1) {
+      // Navigate to home page when on step 1
+      router.push('/');
+    } else {
+      setStep((prev) => Math.max(prev - 1, 1) as FormStep);
+    }
   };
 
   const handleSubmit = async () => {
@@ -413,8 +418,7 @@ export default function CreateActionPage() {
               <button
                 type="button"
                 onClick={handleBack}
-                disabled={step === 1}
-                className="px-6 py-2.5 rounded-lg glass hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium cursor-pointer"
+                className="px-6 py-2.5 rounded-lg glass hover:bg-white/5 transition-colors font-medium cursor-pointer"
               >
                 Back
               </button>
