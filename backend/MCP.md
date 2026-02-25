@@ -102,10 +102,10 @@ node test-mcp-http.js
 
 ### PM2 Configuration
 
-Copy `ecosystem.config.example.js` to `ecosystem.config.js` and customize:
+Copy `ecosystem.config.example.cjs` to `ecosystem.config.cjs` and customize:
 
 ```bash
-cp ecosystem.config.example.js ecosystem.config.js
+cp ecosystem.config.example.cjs ecosystem.config.cjs
 ```
 
 The example config includes:
@@ -121,7 +121,7 @@ The example config includes:
 npm install -g pm2
 
 # Start all services (backend + HTTP MCP server)
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 # Save PM2 process list
 pm2 save
@@ -142,7 +142,7 @@ pm2 monit                  # Monitor CPU and memory usage
 
 ### Quick Start (Single Commands)
 
-If you don't want to use ecosystem.config.js:
+If you don't want to use ecosystem.config.cjs:
 
 ```bash
 # Build the MCP servers
