@@ -136,9 +136,8 @@ export default function CreateActionPage() {
         creatorAddress: formData.creatorAddress || undefined,
       };
 
-      // Call backend API
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-      const response = await fetch(`${backendUrl}/api/action`, {
+      // Call backend API through Next.js proxy
+      const response = await fetch('/api/action', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
